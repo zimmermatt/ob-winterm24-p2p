@@ -32,23 +32,25 @@ class UdpServer:
 
     def serve(self) -> None:
         """Bind to `ip` and `port` and listen for messages."""
-        udp_socket = socket(AF_INET, SOCK_DGRAM)
-        address = (self.ip, self.port)
-        UdpServer.logger.info("Binding to %r", address)
-        udp_socket.bind(address)
+        with socket(AF_INET, SOCK_DGRAM) as udp_socket:
+            address = (self.ip, self.port)
+            UdpServer.logger.info("Binding to %r", address)
+            udp_socket.bind(address)
 
-        listen = True
-        while listen:
-            payload, address = udp_socket.recvfrom(512)
-            UdpServer.logger.info('received message "%s" from %s', payload, address)
-            self.cached_message = payload.decode("utf-8").strip()
-            UdpServer.logger.info('cached message is "%s"', self.cached_message)
-            shutdown = self.cached_message == "shutdown"
-            UdpServer.logger.info("shutdown command = %s", shutdown)
-            if shutdown:
-                listen = False
+            listen = True
+            while listen:
+                payload, address = udp_socket.recvfrom(512)
+                UdpServer.logger.info('received message "%s" from %s', payload, address)
+                try:
+                    self.cached_message = payload.decode("utf-8").strip()
+                except UnicodeError as e:
+                    UdpServer.logger.info("Invalid string sent in message: %s", e)
+                UdpServer.logger.info('cached message is "%s"', self.cached_message)
+                shutdown = self.cached_message == "shutdown"
+                UdpServer.logger.info("shutdown command = %s", shutdown)
+                if shutdown:
+                    listen = False
 
-        udp_socket.close()
 
     def get_cached_message(self) -> str:
         """Return the cached message"""
