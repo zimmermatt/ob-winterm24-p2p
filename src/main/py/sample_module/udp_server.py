@@ -41,16 +41,19 @@ class UdpServer:
             while listen:
                 payload, address = udp_socket.recvfrom(512)
                 UdpServer.logger.info('received message "%s" from %s', payload, address)
-                try:
-                    self.cached_message = payload.decode("utf-8").strip()
-                except UnicodeError as e:
-                    UdpServer.logger.info("Invalid string sent in message: %s", e)
-                UdpServer.logger.info('cached message is "%s"', self.cached_message)
-                shutdown = self.cached_message == "shutdown"
+                shutdown = self.handle(payload)
                 UdpServer.logger.info("shutdown command = %s", shutdown)
                 if shutdown:
                     listen = False
 
+    def handle(self, payload: bytes) -> bool:
+        """handle the UDP request decoding and commands"""
+        try:
+            self.cached_message = payload.decode("utf-8").strip()
+            UdpServer.logger.info('cached message is "%s"', self.cached_message)
+        except UnicodeError as e:
+            UdpServer.logger.info("Invalid string sent in message: %s", e)
+        return self.cached_message == "shutdown"
 
     def get_cached_message(self) -> str:
         """Return the cached message"""
