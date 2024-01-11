@@ -16,7 +16,11 @@ else
 
     virtualenv --python=python3 venv
 
-    source venv/bin/activate
+    if [ "$(uname)" = "Darwin" ] || [ "$(expr substr $(uname -s) 1 5)" = "Linux" ]; then
+        source venv/bin/activate
+    else
+        source venv/Scripts/activate
+    fi
 
     if [ -f requirements.txt ]; then
       pip install -r requirements.txt
