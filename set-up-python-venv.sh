@@ -3,6 +3,7 @@
 # Is this actually shell portable?
 if [[ "${0}" =~ .*\.sh ]]; then
     echo "ERROR: This script needs to be sourced to work as intended."
+    echo "Script name: ${0}"
     exit 42
 else
     command -v pip3 > /dev/null 2>&1 || {
