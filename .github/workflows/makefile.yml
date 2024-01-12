@@ -20,7 +20,7 @@ jobs:
         pip3 install virtualenv
         virtualenv --python=python3 venv
         . venv/bin/activate
-        pip install -r requirements
+        pip install -r requirements.txt
 
     - name: Run linters and tests
       run: make test
