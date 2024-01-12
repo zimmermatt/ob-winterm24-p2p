@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Is this actually shell portable?
-if [[ "${0}" =~ .*\.sh && "${1}" != "ci-build" ]]; then
+if [[ "${0}" =~ .*\.sh && "${1}" != "ci-env" ]]; then
     echo "ERROR: This script needs to be sourced to work as intended."
     echo "Script name: ${0}"
     exit 42
