@@ -18,6 +18,8 @@ class UdpServer:
     next message is recieved.
     """
 
+    logger = logging.getLogger("UdpServer")
+
     def __init__(self, server_ip: str, listen_port: int) -> None:
         """Construct a `UdpServer`.
 
@@ -25,7 +27,6 @@ class UdpServer:
         server_ip   -- the ip to bind to
         listen_port -- the port to listen on
         """
-        UdpServer.logger = logging.getLogger("UdpServer")
         self.ip = server_ip
         self.port = listen_port
         self.cached_message = ""
