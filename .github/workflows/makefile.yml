@@ -16,7 +16,7 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Set up python environment
-      run: . set-up-python-venv.sh
+      run: . set-up-python-venv.sh ci-build
 
     - name: Run linters and tests
-      run: . venv/bin/activate && make test
+      run: make test
