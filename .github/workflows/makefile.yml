@@ -23,4 +23,4 @@ jobs:
         pip install -r requirements.txt
 
     - name: Run linters and tests
-      run: make test
+      run: . venv/bin/activate && make test
