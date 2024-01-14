@@ -11,6 +11,3 @@ do
   python3 -m sample_module.udp_server ${port} &
 done
 
-wait
-
-
