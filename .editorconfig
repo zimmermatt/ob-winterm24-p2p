@@ -15,7 +15,7 @@ charset = utf-8
 
 # Max line length for python files
 [*.py]
-max_line_length = 80
+max_line_length = 88
 
 # Tab indentation for Makefile (no size specified)
 [Makefile]
