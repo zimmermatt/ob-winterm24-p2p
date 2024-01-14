@@ -16,3 +16,9 @@ run:
 test: ruff pylint
 	export PYTHONPATH=src/main/py; \
 	python3 -m unittest discover --pattern "*_test.py" --start-directory src/test/py --top-level-directory .
+
+clean:
+	@echo "I'm cleaning OwO"
+	rm -rf venv
+	find . -name "*.pyc" -delete
+	find . -type d -name "__pycache__" -delete
