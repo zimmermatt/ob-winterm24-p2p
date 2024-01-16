@@ -18,7 +18,7 @@ class Peer:
     Class to manage peer functionality.
     """
 
-    def __init__(self, network_address: str, port: int) -> None:
+    def __init__(self, network_address: str, port: int, ipfs) -> None:
         """
         Initialize the Peer class by joining the IPFS network.
 
@@ -26,7 +26,9 @@ class Peer:
             network_address (str): The network address to join.
             port (int): The port number to use for the connection.
         """
-        # join_ipfs_network(network_address, port)
+        self.network_address = network_address
+        self.port = port
+        self.ipfs = ipfs
         print(f"Connected to {network_address} running on port {port}")
         self.commissions = []
 
@@ -35,14 +37,14 @@ class Peer:
         Mark the commission as complete, publish it on IPFS, and remove it from the list.
         """
         commission.set_complete()
-        # ipfs_publish(topic=commission.get_file_descriptor(), "Commission complete")
+        self.ipfs.ipfs_publish(commission.get_file_descriptor(), "Commission complete")
         self.commissions.remove(commission)
 
     def send_commission_request(self, commission: Artwork) -> None:
         """
         Publish the commission on IPFS, add it to the list, and schedule the deadline notice.
         """
-        # ipfs_publish(topic=commission.get_file_descriptor(), commission)
+        self.ipfs.ipfs_publish(commission.get_file_descriptor(), commission)
         current_time = int(time.time())
         deadline_seconds = current_time + commission.get_wait_time()
         self.commissions.append(commission)
@@ -66,11 +68,18 @@ class Peer:
             except ValueError:
                 print("Invalid input. Please enter a valid integer.")
 
+    def connect_to_network(self) -> None:
+        """
+        Connect to the IPFS network.
+        """
+        self.ipfs.connect(self.network_address, self.port)
+
 
 if __name__ == "__main__":
     logging.basicConfig(
         format="%(asctime)s %(name)s %(levelname)s | %(message)s", level=logging.INFO
     )
     address, port_num = sys.argv[1], int(sys.argv[2])
-    peer = Peer(address, port_num)
-    peer.commission_art_piece()
+    # peer = Peer(address, port_num)
+    # peer.connect_to_network()
+    # peer.commission_art_piece()
