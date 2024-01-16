@@ -44,6 +44,15 @@ class Artwork:
             float: The wait time for the artwork.
         """
         return self.wait_time
+    
+    def get_file_descriptor(self):
+        """
+        Returns the file descriptor for the artwork.
+
+        Returns:
+            str: The file descriptor for the artwork.
+        """
+        return self.ipfs_file_descriptor
 
     def set_complete(self):
         """

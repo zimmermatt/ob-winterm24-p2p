@@ -12,7 +12,6 @@ from commission.artwork import Artwork
 
 # join_ipfs_network, ipfs_publish, not implemented
 
-
 class Peer:
     """
     Class to manage peer functionality.
@@ -35,14 +34,14 @@ class Peer:
         Mark the commission as complete, publish it on IPFS, and remove it from the list.
         """
         commission.set_complete()
-        # ipfs_publish(commission)
+        # ipfs_publish(topic=commission.get_file_descriptor(), "Commission complete")
         self.commissions.remove(commission)
 
     def send_commission_request(self, commission: Artwork) -> None:
         """
         Publish the commission on IPFS, add it to the list, and schedule the deadline notice.
         """
-        # ipfs_publish(commission)
+        # ipfs_publish(topic=commission.get_file_descriptor(), commission)
         current_time = int(time.time())
         deadline_seconds = current_time + commission.get_wait_time()
         self.commissions.append(commission)
