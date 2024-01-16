@@ -29,7 +29,7 @@ class Peer:
         print(f"Connected to {network_address} running on port {port}")
         self.commissions = []
 
-    def send_deadline_notice(self, commission: Artwork) -> None:
+    def send_deadline_reached(self, commission: Artwork) -> None:
         """
         Mark the commission as complete, publish it on IPFS, and remove it from the list.
         """
@@ -72,3 +72,4 @@ if __name__ == "__main__":
     )
     address, port_num = sys.argv[1], int(sys.argv[2])
     peer = Peer(address, port_num)
+    peer.commission_art_piece()
