@@ -44,7 +44,7 @@ class Artwork:
             float: The wait time for the artwork.
         """
         return self.wait_time
-    
+
     def get_file_descriptor(self):
         """
         Returns the file descriptor for the artwork.

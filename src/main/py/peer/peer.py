@@ -12,6 +12,7 @@ from commission.artwork import Artwork
 
 # join_ipfs_network, ipfs_publish, not implemented
 
+
 class Peer:
     """
     Class to manage peer functionality.
@@ -46,7 +47,7 @@ class Peer:
         deadline_seconds = current_time + commission.get_wait_time()
         self.commissions.append(commission)
         deadline_timer = threading.Timer(
-            deadline_seconds, self.send_deadline_notice, args=(commission,)
+            deadline_seconds, self.send_deadline_reached, args=(commission,)
         )
         deadline_timer.start()
 
