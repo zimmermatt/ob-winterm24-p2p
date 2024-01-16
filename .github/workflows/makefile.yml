@@ -1,0 +1,22 @@
+name: Makefile CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up python environment
+      run: source set-up-python-venv.sh ci-env
+
+    - name: Run linters and tests
+      run: source venv/bin/activate && make test
