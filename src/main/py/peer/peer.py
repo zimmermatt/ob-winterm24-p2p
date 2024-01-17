@@ -16,10 +16,14 @@ class Peer:
     """
     Class to manage peer functionality.
     """
+
     logger = logging.getLogger("Peer")
+
     def __init__(self, network_address: str, port: int, ipfs) -> None:
         """
         Initialize the Peer class by joining the IPFS network.
+
+        Params:
         - network_address (str): The network address to join.
         - port (int): The port number to use for the connection.
         """
@@ -75,12 +79,15 @@ class Peer:
         """
         Connect to the IPFS network.
         """
-        try:
-            self.ipfs.connect(self.network_address, self.port)
-            self.logger.info(f"Connected to {self.network_address} running on port {self.port}")
+        connected = self.ipfs.connect(self.network_address, self.port)
+        if connected:
+            self.logger.info(
+                "Connected to %s running on port %d", self.network_address, self.port
+            )
             return True
-        except:
-            return False
+        self.logger.error("Failed to connect to %s", self.network_address)
+        return False
+
 
 if __name__ == "__main__":
     logging.basicConfig(
