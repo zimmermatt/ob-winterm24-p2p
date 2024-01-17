@@ -70,7 +70,7 @@ class Peer:
                 self.send_commission_request(commission)
                 break
             except ValueError:
-                print("Invalid input. Please enter a valid integer.")
+                print("Invalid input. Please enter a valid float.")
 
     def connect_to_network(self):
         """
