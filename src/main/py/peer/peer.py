@@ -7,7 +7,6 @@ Peer class allows us to join the network, commission artwork, and generate fragm
 import logging
 import sys
 import threading
-import time
 from commission.artwork import Artwork
 
 # join_ipfs_network, ipfs_publish, not implemented
@@ -21,16 +20,15 @@ class Peer:
     def __init__(self, network_address: str, port: int, ipfs) -> None:
         """
         Initialize the Peer class by joining the IPFS network.
-
-        Args:
-            network_address (str): The network address to join.
-            port (int): The port number to use for the connection.
+        - network_address (str): The network address to join.
+        - port (int): The port number to use for the connection.
         """
         self.network_address = network_address
         self.port = port
         self.ipfs = ipfs
         print(f"Connected to {network_address} running on port {port}")
         self.commissions = []
+        self.deadline_timers = {}
 
     def send_deadline_reached(self, commission: Artwork) -> None:
         """
@@ -40,18 +38,24 @@ class Peer:
         self.ipfs.ipfs_publish(commission.get_file_descriptor(), "Commission complete")
         self.commissions.remove(commission)
 
+    def setup_deadline_timer(self, commission: Artwork) -> None:
+        """
+        Schedule the deadline notice for the commission.
+        """
+        deadline_seconds = commission.get_wait_time()
+        deadline_timer = threading.Timer(
+            deadline_seconds, self.send_deadline_reached, args=(commission,)
+        )
+        self.deadline_timers[commission.get_file_descriptor()] = deadline_timer
+        deadline_timer.start()
+
     def send_commission_request(self, commission: Artwork) -> None:
         """
         Publish the commission on IPFS, add it to the list, and schedule the deadline notice.
         """
         self.ipfs.ipfs_publish(commission.get_file_descriptor(), commission)
-        current_time = int(time.time())
-        deadline_seconds = current_time + commission.get_wait_time()
         self.commissions.append(commission)
-        deadline_timer = threading.Timer(
-            deadline_seconds, self.send_deadline_reached, args=(commission,)
-        )
-        deadline_timer.start()
+        self.setup_deadline_timer(commission)
 
     def commission_art_piece(self) -> None:
         """
@@ -59,20 +63,20 @@ class Peer:
         """
         while True:
             try:
-                width = int(input("Enter commission width: "))
-                height = int(input("Enter commission height: "))
-                wait_time = int(input("Enter wait time in seconds: "))
+                width = float(input("Enter commission width: "))
+                height = float(input("Enter commission height: "))
+                wait_time = float(input("Enter wait time in seconds: "))
                 commission = Artwork(width, height, wait_time)
                 self.send_commission_request(commission)
                 break
             except ValueError:
                 print("Invalid input. Please enter a valid integer.")
 
-    def connect_to_network(self) -> None:
+    def connect_to_network(self):
         """
         Connect to the IPFS network.
         """
-        self.ipfs.connect(self.network_address, self.port)
+        return self.ipfs.connect(self.network_address, self.port)
 
 
 if __name__ == "__main__":
