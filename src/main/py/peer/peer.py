@@ -16,7 +16,7 @@ class Peer:
     """
     Class to manage peer functionality.
     """
-
+    logger = logging.getLogger("Peer")
     def __init__(self, network_address: str, port: int, ipfs) -> None:
         """
         Initialize the Peer class by joining the IPFS network.
@@ -26,7 +26,6 @@ class Peer:
         self.network_address = network_address
         self.port = port
         self.ipfs = ipfs
-        print(f"Connected to {network_address} running on port {port}")
         self.commissions = []
         self.deadline_timers = {}
 
@@ -70,14 +69,18 @@ class Peer:
                 self.send_commission_request(commission)
                 break
             except ValueError:
-                print("Invalid input. Please enter a valid float.")
+                self.logger.error("Invalid input. Please enter a valid float.")
 
     def connect_to_network(self):
         """
         Connect to the IPFS network.
         """
-        return self.ipfs.connect(self.network_address, self.port)
-
+        try:
+            self.ipfs.connect(self.network_address, self.port)
+            self.logger.info(f"Connected to {self.network_address} running on port {self.port}")
+            return True
+        except:
+            return False
 
 if __name__ == "__main__":
     logging.basicConfig(
