@@ -22,9 +22,9 @@ class TestArtwork(unittest.TestCase):
         self.assertEqual(self.artwork.get_wait_time(), 0.5)
         self.assertEqual(self.artwork.commission_complete, False)
 
-    def test_generate_file_descriptor(self):
+    def test_generate_key(self):
         """Test the generate_file_descriptor method of Artwork"""
-        descriptor = self.artwork.generate_file_descriptor()
+        descriptor = self.artwork.generate_key()
         # Assuming the descriptor should be a string
         self.assertIsInstance(descriptor, str)
 

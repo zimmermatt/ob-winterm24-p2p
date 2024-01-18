@@ -5,6 +5,10 @@ Module to manage artwork commission class
 Artwork class allows us to create a commission, generate a file descriptor
 """
 
+import string
+import random
+from datetime import datetime, timedelta
+
 
 class Artwork:
     """
@@ -14,33 +18,38 @@ class Artwork:
     def __init__(self, width, height, wait_time):
         """
         Initializes an instance of the Artwork class.
-        - width (float): The width of the artwork.
-        - height (float): The height of the artwork.
-        - wait_time (float): The wait time for the artwork.
+        - width (float): The width of the artwork in pixels.
+        - height (float): The height of the artwork in pixels.
+        - wait_time (int): The wait time for the artwork in minutes.
         """
         self.width = width
         self.height = height
-        self.wait_time = wait_time
+        self.wait_time = timedelta(seconds=wait_time)
         self.commission_complete = False
-        self.ipfs_file_descriptor = self.generate_file_descriptor()
+        self.key = self.generate_key()
+        self.start_time = datetime.now()
 
-    def generate_file_descriptor(self):
+    def generate_key(self):
         """
         Generates a file descriptor for the artwork.
         """
-        return "placeholder_ipfs_file_descriptor"
+        key_length = 10
+        characters = string.ascii_letters + string.digits
+        key = "".join(random.choice(characters) for _ in range(key_length))
+        return key
 
     def get_wait_time(self):
         """
-        Returns the wait time for the artwork.
+        Returns the remaining wait time until the artwork is complete in seconds.
         """
-        return self.wait_time
+        remaining_time = (self.start_time + self.wait_time) - datetime.now()
+        return max(0, remaining_time.total_seconds())
 
-    def get_file_descriptor(self):
+    def get_key(self):
         """
         Returns the file descriptor for the artwork.
         """
-        return self.ipfs_file_descriptor
+        return self.key
 
     def set_complete(self):
         """
