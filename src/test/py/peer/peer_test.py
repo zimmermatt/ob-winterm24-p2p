@@ -56,6 +56,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         """
         Initialize IPFS Mock and Peer instance
         """
+
         self.mock_kdm = MagicMock()
         self.mock_node = AsyncMock(spec=MockNode)
         self.mock_kdm.network.Server.return_value = self.mock_node

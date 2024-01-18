@@ -9,7 +9,6 @@ import string
 import random
 from datetime import datetime, timedelta
 
-
 class Artwork:
     """
     Class to manage artwork commissions

@@ -1,5 +1,6 @@
 astroid==3.0.2
 colorama==0.4.6
+coverage==7.4.0
 dill==0.3.7
 isort==5.13.2
 kademlia==2.2.2
