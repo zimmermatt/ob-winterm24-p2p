@@ -10,6 +10,7 @@ import pickle
 import logging
 import sys
 import threading
+from typing import Union
 import kademlia
 from commission.artwork import Artwork
 
@@ -19,12 +20,12 @@ class Peer:
 
     logger = logging.getLogger("Peer")
 
-    def __init__(self, port: int, network_address: str | None, kdm) -> None:
+    def __init__(self, port: int, network_address: Union[str, None], kdm) -> None:
         """
         Initialize the Peer class by joining the kademlia network.
 
         Params:
-        - network_address (str): The IP address of one of the peers
+        - network_address (Union[str, None]): The IP address of one of the peers or None.
         - port (int): The port number to use for the connection.
         """
         if network_address is not None:
