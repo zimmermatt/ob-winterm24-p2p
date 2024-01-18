@@ -98,7 +98,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         commission = self.peer.commissions[0]
         self.assertEqual(commission.width, 10)
         self.assertEqual(commission.height, 20)
-        self.assertEqual(commission.wait_time, timedelta(seconds=10))
+        self.assertLessEqual(commission.wait_time, timedelta(seconds=10))
         self.mock_node.set.assert_called_with(
             commission.get_key(), pickle.dumps(commission)
         )

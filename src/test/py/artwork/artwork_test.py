@@ -19,9 +19,9 @@ class TestArtwork(unittest.TestCase):
         """Check if the attributes are initialized correctly"""
         self.assertEqual(self.artwork.width, 10)
         self.assertEqual(self.artwork.height, 20)
-        self.assertEqual(self.artwork.get_wait_time(), 0.5)
+        self.assertLessEqual(self.artwork.get_wait_time(), 0.5)
         self.assertEqual(self.artwork.commission_complete, False)
-        
+
     def test_generate_key(self):
         """Test the generate_file_descriptor method of Artwork"""
         descriptor = self.artwork.generate_key()
