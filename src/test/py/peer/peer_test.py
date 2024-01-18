@@ -32,9 +32,9 @@ class MockNode:
             return self.data_store[key]
         raise KeyError(f"No value found for key: {key}")
 
-    async def bootstrap(self, peer):
+    async def bootstrap(self, peers):
         """Bootstrap the node with a peer."""
-        if len(peer) > 0:
+        if len(peers) > 0:
             return True
         return False
 
@@ -54,7 +54,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self):
         """
-        Initialize IPFS Mock and Peer instance
+        Initialize Kademlia Mocks and Peer instance
         """
 
         self.mock_kdm = MagicMock()
@@ -70,7 +70,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(str(self.peer.network_ip_address), "127.0.0.1")
         # Verify that the port is set to 5001
         self.assertEqual(self.peer.port, 5001)
-        # Verify that the IPFS instance is set to the mock_kdm object
+        # Verify that the kdm instance is set to the mock_kdm object
         self.assertEqual(self.peer.kdm, self.mock_kdm)
 
     async def test_connect(self):
@@ -89,9 +89,9 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         """
         Test case for the commission_art_piece method of the Peer class.
         This test verifies that the commission_art_piece method correctly adds a commission,
-        publishes it on IPFS, and schedules and sends a deadline notice.
+        publishes it on Kademlia, and schedules and sends a deadline notice.
         """
-        self.test_logger.info(mock_input, mock_timer)
+        self.test_logger.debug(mock_input, mock_timer)
         self.peer.node = self.mock_node
         self.peer.commission_art_piece()
         self.assertEqual(len(self.peer.commissions), 1)
@@ -102,7 +102,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.mock_node.set.assert_called_with(
             commission.get_key(), pickle.dumps(commission)
         )
-        # Check that send_deadline_reached was called, which in turn calls ipfs_publish
+        # Check that send_deadline_reached was called, which in turn calls our node's set method
         self.mock_node.set.assert_called_with(
             commission.get_key(), pickle.dumps(commission)
         )

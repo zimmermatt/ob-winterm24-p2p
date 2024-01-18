@@ -5,12 +5,12 @@ Module to manage peer functionality.
 Peer class allows us to join the network, commission artwork, and generate fragments to share
 """
 import asyncio
+from datetime import timedelta
 import ipaddress
 import pickle
 import logging
 import sys
 import threading
-from typing import Union
 import kademlia
 from commission.artwork import Artwork
 
@@ -20,17 +20,18 @@ class Peer:
 
     logger = logging.getLogger("Peer")
 
-    def __init__(self, port: int, network_address: Union[str, None], kdm) -> None:
+    def __init__(self, port: int, peer_network_address: str, kdm) -> None:
         """
         Initialize the Peer class by joining the kademlia network.
 
         Params:
-        - network_address (Union[str, None]): The IP address of one of the peers or None.
-        - port (int): The port number to use for the connection.
+        - peer_network_address (str): String containing the IP address and port number of a peer
+          on the network separated by a colon.
+        - port (int): The port number for the peer to listen on.
         """
-        if network_address is not None:
+        if peer_network_address is not None:
             try:
-                network_ip_address, network_port_num = network_address.split(":")
+                network_ip_address, network_port_num = peer_network_address.split(":")
                 self.network_ip_address = ipaddress.ip_address(network_ip_address)
                 self.network_port_num = int(network_port_num)
             except ValueError as exc:
@@ -54,7 +55,7 @@ class Peer:
         """
         Schedule the deadline notice for the commission.
         """
-        deadline_seconds = commission.get_wait_time()
+        deadline_seconds = commission.get_remaining_time()
         deadline_timer = threading.Timer(
             deadline_seconds, self.send_deadline_reached, args=(commission,)
         )
@@ -78,7 +79,7 @@ class Peer:
                 width = float(input("Enter commission width: "))
                 height = float(input("Enter commission height: "))
                 wait_time = float(input("Enter wait time in seconds: "))
-                commission = Artwork(width, height, wait_time)
+                commission = Artwork(width, height, timedelta(seconds=wait_time))
                 self.send_commission_request(commission)
                 break
             except ValueError:

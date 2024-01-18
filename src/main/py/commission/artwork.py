@@ -7,6 +7,7 @@ Artwork class allows us to create a commission, generate a file descriptor
 
 import string
 import random
+import hashlib
 from datetime import datetime, timedelta
 
 
@@ -15,34 +16,36 @@ class Artwork:
     Class to manage artwork commissions
     """
 
-    def __init__(self, width, height, wait_time):
+    def __init__(self, width: float, height: float, wait_time: timedelta):
         """
         Initializes an instance of the Artwork class.
         - width (float): The width of the artwork in pixels.
         - height (float): The height of the artwork in pixels.
-        - wait_time (int): The wait time for the artwork in minutes.
+        - wait_time (timedelta): The wait time for the artwork as a timedelta.
         """
         self.width = width
         self.height = height
-        self.wait_time = timedelta(seconds=wait_time)
+        self.wait_time = wait_time
         self.commission_complete = False
         self.key = self.generate_key()
-        self.start_time = datetime.now()
+        start_time = datetime.now()
+        self.end_time = start_time + self.wait_time
 
     def generate_key(self):
         """
-        Generates a file descriptor for the artwork.
+        Generates a random SHA-1 hash as a file descriptor for the artwork.
         """
         key_length = 10
         characters = string.ascii_letters + string.digits
-        key = "".join(random.choice(characters) for _ in range(key_length))
-        return key
+        random_string = "".join(random.choice(characters) for _ in range(key_length))
+        sha1_hash = hashlib.sha1(random_string.encode()).hexdigest()
+        return sha1_hash
 
-    def get_wait_time(self):
+    def get_remaining_time(self):
         """
         Returns the remaining wait time until the artwork is complete in seconds.
         """
-        remaining_time = (self.start_time + self.wait_time) - datetime.now()
+        remaining_time = self.end_time - datetime.now()
         return max(0, remaining_time.total_seconds())
 
     def get_key(self):
