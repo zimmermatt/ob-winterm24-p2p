@@ -1,3 +1,20 @@
+[tool.coverage.report]
+exclude_also = [
+  "if 0:",
+  "^if[ \t]+__name__[ \t]+==[ \t]+['\"]__main__['\"]",
+]
+ignore_errors = true
+show_missing = true
+skip_empty = true
+
+[tool.coverage.run]
+omit = [ "src/test/*", ]
+branch = true
+
+[tool.coverage.html]
+directory = "build/htmlcov"
+skip_empty = true
+
 [tool.pylint]
 # I prefer to allow an empty line at the end of a source file.
 disable = ["trailing-newlines"]
