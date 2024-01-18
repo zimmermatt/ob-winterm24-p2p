@@ -3,13 +3,11 @@
 PSTART=${1:-50000}
 PEND=${2:-50050}
 # Just a basic script to spin up listening servers on different ports in dynamic port range
-PORTS=$(seq ${PSTART} ${PEND})
-
 IP=127.0.0.1
 COUNT=0
 ((NUM_PORTS=${PEND}-${PSTART}))
 
-echo $NUM_PORTS
+echo "Total number of ports: $NUM_PORTS"
 export PYTHONPATH=../../src/main/py
 
 port=$PSTART
