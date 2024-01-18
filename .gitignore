@@ -90,4 +90,4 @@ ENV/
 .ropeproject
 
 # Spin up script
-devops/deploy/spin_up_script.txt
+devops/deploy/port_list.txt
