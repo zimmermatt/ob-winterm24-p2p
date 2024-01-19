@@ -12,6 +12,8 @@ import logging
 import sys
 import threading
 import kademlia
+import random
+from PIL import Image
 from commission.artwork import Artwork
 
 
@@ -96,6 +98,45 @@ class Peer:
                 [(str(self.network_ip_address), self.network_port_num)]
             )
         self.logger.info("Running server on port %d", self.port)
+
+    def merge_canvas(width: int, height: int, fragments) -> Image.Image:
+        """
+        Merge fragments received from Contributor Artists Peer into a completed canvas with colored pixels and save them
+        """
+        canvas = Image.new(mode="RGB", size=(width, height), color=(255,255,255))
+        pixels = canvas.load()
+
+        for i in range(len(fragments)):
+            x = fragments[i][0]
+            y = fragments[i][1]
+            # Making them black for now
+            pixels[x, y] = (0, 0, 0)
+
+        canvas.save("canvas.png", "PNG")
+        return canvas
+
+    def generate_fragments(constraints: Tuple) ->  List:
+        """
+        Generate fragments as a list of (x,y) tuples coordinates of the pixels to be colored from the constraints tuples. For now, constraints only have width and height.
+        """
+        random.seed(7)
+        # We're going to generate fragments by choosing the starting coordinate, and then the width and height of the fragment to make a rectangle.
+        # We're going to only make the pixels within that rectangle be colored
+        x = random.randint(0, constraints[0] - 1)
+        y = random.randint(1, constraints[1] - 1)
+
+        colored_pixels = []
+
+        w_fragment = random.randint(x, constraints[0] - x - 1)
+        h_fragment = random.randint(y, constraints[1] - y - 1)
+
+        #Means that currently 0.3 of the fragment will be colored
+        for i in range(int(w_fragment * h_fragment * 0.3)):
+            x_pixel = random.randint(x, x + w_fragment - 1)
+            y_pixel = random.randint(y, y + h_fragment - 1)
+            colored_pixels.append((x, y))
+
+        return colored_pixels
 
 
 async def main():
