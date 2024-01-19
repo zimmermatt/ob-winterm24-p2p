@@ -11,7 +11,7 @@ import pickle
 import logging
 import sys
 import threading
-import kademlia
+import server as kademlia
 from commission.artwork import Artwork
 
 
@@ -85,11 +85,36 @@ class Peer:
             except ValueError:
                 self.logger.error("Invalid input. Please enter a valid float.")
 
+    def generate_piece(self, commission: Artwork):
+        """Generate a piece of the artwork"""
+        self.logger.info("Generating fragment")
+        return commission
+
+    def callback_function(self, key, value):
+        """
+        Callback function for when data is stored.
+
+        Args:
+            key (bytes): The key to store.
+            value (bytes): The value to store.
+        """
+        self.logger.info("Data stored with key: %s", key)
+        self.logger.info("Data stored with value: %s", value)
+        artwork_object = pickle.loads(value)
+        if isinstance(artwork_object, Artwork):
+            self.logger.info("Received commission request")
+            self.logger.info("Commission width: %f", artwork_object.width)
+            self.logger.info("Commission height: %f", artwork_object.height)
+            self.logger.info("Commission wait time: %s", artwork_object.wait_time)
+            if not artwork_object.commission_complete:
+                fragment = self.generate_piece(artwork_object)
+                self.node.set(fragment.get_key(), pickle.dumps(fragment))
+
     async def connect_to_network(self):
         """
         Connect to the kademlia network.
         """
-        self.node = self.kdm.network.Server()
+        self.node = self.kdm.network.Server(self.callback_function)
         await self.node.listen(self.port)
         if self.network_ip_address is not None:
             await self.node.bootstrap(
