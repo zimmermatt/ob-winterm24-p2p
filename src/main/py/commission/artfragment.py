@@ -5,19 +5,22 @@ Module to manage artfragment commission class
 ArtFragment class allows us to create a piece designated for an artwork"""
 from random import randrange
 import logging
+from commission.artwork import Artwork
 
 class ArtFragment:
     """
     Class to manage artfragment commissions
     """
     logger = logging.getLogger("ArtFragment")
-    def __init__(self, artwork, contributor):
+
+    def __init__(self, artwork: Artwork, contributor):
         """
         Initializes an instance of the artfragment class.
         - width (float): The width of the artfragment.
         - height (float): The height of the artfragment.
-        - contributor (string): Peer ID that created the artfragment.
         - coordinates (tuple): (x,y) coordinate of the artfragment.
+        - contributor (string): Peer ID that created the artfragment.
+        - artwork (Artwork): artwork that the fragment is intended for.
         - fragment (set): list of (x,y,color) based on constraint.
         """
         self.width = 0
@@ -36,7 +39,7 @@ class ArtFragment:
             return False
         return True
 
-    def generate_base_piece(self, artwork):
+    def generate_piece(self, artwork: Artwork):
         """
         Generates a set of pixels to occupy based on artwork
         """
@@ -54,19 +57,20 @@ class ArtFragment:
 
         # generate the set of pixels to occupy
         num_of_pixels = randrange(0, width * height)
-        pixels_to_occupy = set()
+        fragment = set()
+
+        # generate set of coordinates with constraints adherence. Format: ((x,y),(a,b,c,d)) where (a,b,c,d) is color and (x,y) are coordinates
+        # TODO:
+        # - implement address-based adherence
+        # - implement line type adherence
+
+        color_constraint = artwork.constraint.get_color()
 
         for i in range(num_of_pixels):
             coordinates = (randrange(x_coordinate, x_coordinate + width + 1), randrange(y_coordinate, y_coordinate + height + 1))
-            pixels_to_occupy.add(coordinates)
 
-        return pixels_to_occupy
+            pixel_info = (coordinates, color_constraint)
+            fragment.add(pixel_info)
 
-    def generate_piece(self, artwork):
-        """
-        Generate completed piece based on constraints given
-        TODO: implement constraint adherence
-        """
-        base_piece = self.generate_base_piece(artwork)
-        return base_piece
+        return fragment
 
