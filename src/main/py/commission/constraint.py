@@ -7,6 +7,7 @@ Constraint class allows us to add constraints to an artwork
 
 import string
 
+
 class Constraint:
     """
     Class to manage constraint
@@ -46,5 +47,3 @@ class Constraint:
         Returns constraint's line type
         """
         return self.line_type
-
-

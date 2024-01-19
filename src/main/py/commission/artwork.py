@@ -11,12 +11,19 @@ import hashlib
 from datetime import datetime, timedelta
 from commission.constraint import Constraint
 
+
 class Artwork:
     """
     Class to manage artwork commissions
     """
 
-    def __init__(self, width: float, height: float, wait_time: timedelta, constraint: Constraint):
+    def __init__(
+        self,
+        width: float,
+        height: float,
+        wait_time: timedelta,
+        constraint: Constraint = None,
+    ):
         """
         Initializes an instance of the Artwork class.
         - width (float): The width of the artwork in pixels.
@@ -58,7 +65,7 @@ class Artwork:
 
     def get_constraint(self):
         """
-        Returns the list of constraints for the artwork.
+        Returns the constraint for the artwork.
         """
         return self.constraint
 
@@ -67,6 +74,7 @@ class Artwork:
         Set a constraint to the artwork.
         """
         self.constraint = constraint
+        return self
 
     def set_complete(self):
         """
