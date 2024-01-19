@@ -115,7 +115,7 @@ class Peer:
         canvas.save("canvas.png", "PNG")
         return canvas
 
-    def generate_fragments(constraints: Tuple) ->  List:
+    def generate_fragments(constraints):
         """
         Generate fragments as a list of (x,y) tuples coordinates of the pixels to be colored from the constraints tuples. For now, constraints only have width and height.
         """
@@ -134,7 +134,7 @@ class Peer:
         for i in range(int(w_fragment * h_fragment * 0.3)):
             x_pixel = random.randint(x, x + w_fragment - 1)
             y_pixel = random.randint(y, y + h_fragment - 1)
-            colored_pixels.append((x, y))
+            colored_pixels.append((x_pixel, y_pixel))
 
         return colored_pixels
 
