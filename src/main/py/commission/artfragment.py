@@ -43,8 +43,8 @@ class ArtFragment:
         x_coordinate = randrange(0, artwork.width + 1)
         y_coordinate = randrange(0, artwork.height + 1)
 
-        width = randrange(x_coordinate, artwork.width) - x_coordinate + 1
-        height = randrange(y_coordinate, artwork.height) - y_coordinate + 1
+        width = randrange(x_coordinate, artwork.width + 1) - x_coordinate + 1
+        height = randrange(y_coordinate, artwork.height + 1) - y_coordinate + 1
 
         self.coordinates = (x_coordinate, y_coordinate)
         self.width = width
@@ -62,11 +62,13 @@ class ArtFragment:
 
         # generate set of coordinates with color constraint adherence.
         color_constraint = artwork.constraint.get_color()
+        x_bound = x_coordinate + width
+        y_bound = y_coordinate + height
 
         while num_of_pixels > 0:
             coordinates = (
-                randrange(x_coordinate, x_coordinate + width + 1),
-                randrange(y_coordinate, y_coordinate + height + 1),
+                randrange(x_coordinate, x_bound),
+                randrange(y_coordinate, y_bound),
             )
 
             pixel_info = (coordinates, color_constraint)
