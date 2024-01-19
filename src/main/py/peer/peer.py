@@ -13,6 +13,7 @@ import sys
 import threading
 import kademlia
 from commission.artwork import Artwork
+from server.protocol import Protocol
 
 
 class Peer:
@@ -84,6 +85,18 @@ class Peer:
                 break
             except ValueError:
                 self.logger.error("Invalid input. Please enter a valid float.")
+
+    def generate_fragment(self) -> None:
+        """
+        Trigger function from Fragment class to generate fragments
+        """
+
+    def recieve_fragment(self) -> None:
+        """
+        Originator recieves fragment from contributor
+        """
+        # if we haven't reached the deadline (Artwork)
+        # recieve fragment (add to list to merge? check pull request)
 
     async def connect_to_network(self):
         """
