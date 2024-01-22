@@ -4,6 +4,8 @@ Module to manage peer functionality.
 
 Peer class allows us to join the network, commission artwork, and generate fragments to share
 """
+import random
+from PIL import Image
 import asyncio
 from datetime import timedelta
 import ipaddress
@@ -96,6 +98,23 @@ class Peer:
                 [(str(self.network_ip_address), self.network_port_num)]
             )
         self.logger.info("Running server on port %d", self.port)
+
+
+    def merge_canvas(self, width: int, height: int, fragment) -> Image.Image:
+        """
+        Merge fragments received from a Contributor Artist Peer into a complete colored canvas
+        """
+        canvas = Image.new(mode="RGB", size=(width, height), color=(255,255,255))
+        pixels = canvas.load()
+
+        for pixel in fragment:
+            x = fragment[0][0]
+            y = fragments[0][1]
+            # Making them black for now
+            pixels[x, y] = (0, 0, 0)
+
+        canvas.save("canvas.png", "PNG")
+        return canvas
 
 
 async def main():
