@@ -110,7 +110,7 @@ class Peer:
             x = pixel[0][0]
             y = pixel[0][1]
             # Making them black for now
-            pixels[x, y] = (0, 0, 0)
+            pixels[x, y] = fragment.get_fragment_color()
 
         canvas.save("canvas.png", "PNG")
         return canvas

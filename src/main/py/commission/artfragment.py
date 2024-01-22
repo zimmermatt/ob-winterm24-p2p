@@ -61,7 +61,7 @@ class ArtFragment:
         fragment = set()
 
         # generate set of coordinates with color constraint adherence.
-        color_constraint = artwork.constraint.get_color()
+        color_constraint = artwork.get_constraint().get_color()
         x_bound = x_coordinate + width
         y_bound = y_coordinate + height
 
@@ -82,3 +82,9 @@ class ArtFragment:
         get the artwork that the fragment is contributing to
         """
         return self.artwork
+
+    def get_fragment_color(self):
+        """
+        Get the fragment color
+        """
+        return self.artwork.get_constraint().get_color()
