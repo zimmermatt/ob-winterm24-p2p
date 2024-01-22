@@ -4,7 +4,6 @@ Module to manage peer functionality.
 
 Peer class allows us to join the network, commission artwork, and generate fragments to share
 """
-import random
 from PIL import Image
 import asyncio
 from datetime import timedelta
@@ -109,7 +108,7 @@ class Peer:
 
         for pixel in fragment:
             x = fragment[0][0]
-            y = fragments[0][1]
+            y = fragment[0][1]
             # Making them black for now
             pixels[x, y] = (0, 0, 0)
 
