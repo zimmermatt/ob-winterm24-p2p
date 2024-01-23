@@ -65,13 +65,11 @@ class Peer:
         Schedule the deadline notice for the commission.
         """
 
-        async def deadline_reached():
-            """Send a notice that the deadline has been reached."""
-            await self.send_deadline_reached(commission)
-
         deadline_seconds = commission.get_remaining_time()
         deadline_timer = asyncio.get_event_loop().call_later(
-            deadline_seconds, asyncio.create_task, deadline_reached
+            deadline_seconds,
+            asyncio.create_task,
+            self.send_deadline_reached(commission),
         )
         self.deadline_timers[commission.get_key()] = deadline_timer
 
@@ -89,9 +87,9 @@ class Peer:
                 self.commissions.append(commission)
             else:
                 self.logger.error("Commission failed to send")
+            await self.setup_deadline_timer(commission)
         except TypeError:
             self.logger.error("Commission type is not pickleable")
-        await self.setup_deadline_timer(commission)
 
     async def commission_art_piece(self) -> None:
         """
