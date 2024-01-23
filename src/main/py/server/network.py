@@ -2,10 +2,10 @@
 """ This module contains the NewServer class. """
 
 from kademlia.network import Server
-from server.protocol import NewProtocol
+from server.protocol import NotificationProtocol
 
 
-class NewServer(Server):
+class NotifyingServer(Server):
     """
     A custom server class that extends the functionality of the base Server class.
 
@@ -21,7 +21,7 @@ class NewServer(Server):
 
     """
 
-    def __init__(self, store_callback, ksize=20, alpha=3):
+    def __init__(self, data_stored_callback, ksize=20, alpha=3):
         """
         Initializes a new instance of the NewServer class.
 
@@ -31,7 +31,7 @@ class NewServer(Server):
             store_callback (callable): A callback function called when data is stored.
 
         """
-        self.store_callback = store_callback
+        self.data_stored_callback = data_stored_callback
         # Call the parent class's __init__ with the new protocol
         super().__init__(ksize, alpha)
 
@@ -43,4 +43,6 @@ class NewServer(Server):
             NewProtocol: A new instance of the NewProtocol class.
 
         """
-        return NewProtocol(self.node, self.storage, self.ksize, self.store_callback)
+        return NotificationProtocol(
+            self.node, self.storage, self.ksize, self.data_stored_callback
+        )

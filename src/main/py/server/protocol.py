@@ -1,15 +1,16 @@
 """
 Module for Kademlia library rpc_store() callback
 """
+import asyncio
 from kademlia.protocol import KademliaProtocol
 
 
-class NewProtocol(KademliaProtocol):
+class NotificationProtocol(KademliaProtocol):
     """
     Class for Kademlia library rpc_store() callback
     """
 
-    def __init__(self, source_node, storage, ksize, callback_function) -> None:
+    def __init__(self, source_node, storage, ksize, data_stored_callback) -> None:
         """
         Initialize a new instance of NewProtocol.
 
@@ -19,7 +20,7 @@ class NewProtocol(KademliaProtocol):
             ksize (int): The k parameter for Kademlia.
             callback_function (function): The callback function to be called on rpc_store
         """
-        self.callback_function = callback_function
+        self.data_stored_callback = data_stored_callback
         super().__init__(source_node, storage, ksize)
 
     def rpc_store(self, sender, nodeid, key, value):
@@ -33,4 +34,4 @@ class NewProtocol(KademliaProtocol):
             value (bytes): The value to store.
         """
         super().rpc_store(sender, nodeid, key, value)
-        self.callback_function(key, value)
+        asyncio.create_task(self.data_stored_callback(key, value))

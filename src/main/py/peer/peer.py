@@ -47,8 +47,18 @@ class Peer:
         """
         Mark the commission as complete, publish it on kademlia, and remove it from the list.
         """
+
         commission.set_complete()
-        await self.node.set(commission.get_key(), pickle.dumps(commission))
+        try:
+            set_success = await self.node.set(
+                commission.get_key(), pickle.dumps(commission)
+            )
+            if set_success:
+                self.logger.info("Commission complete")
+            else:
+                self.logger.error("Commission failed to complete")
+        except TypeError:
+            self.logger.error("Commission type is not pickleable")
 
     async def setup_deadline_timer(self, commission: Artwork) -> None:
         """
@@ -60,8 +70,7 @@ class Peer:
             await self.send_deadline_reached(commission)
 
         deadline_seconds = commission.get_remaining_time()
-        loop = asyncio.get_event_loop()
-        deadline_timer = loop.call_later(
+        deadline_timer = asyncio.get_event_loop().call_later(
             deadline_seconds, asyncio.create_task, deadline_reached
         )
         self.deadline_timers[commission.get_key()] = deadline_timer
@@ -70,14 +79,25 @@ class Peer:
         """
         Publish the commission on kademlia, add it to the list, and schedule the deadline notice.
         """
-        await self.node.set(commission.get_key(), pickle.dumps(commission))
-        self.commissions.append(commission)
+
+        try:
+            set_success = await self.node.set(
+                commission.get_key(), pickle.dumps(commission)
+            )
+            if set_success:
+                self.logger.info("Commission sent")
+                self.commissions.append(commission)
+            else:
+                self.logger.error("Commission failed to send")
+        except TypeError:
+            self.logger.error("Commission type is not pickleable")
         await self.setup_deadline_timer(commission)
 
     async def commission_art_piece(self) -> None:
         """
         Get commission details from user input, create a commission, and send the request.
         """
+
         while True:
             try:
                 width = float(input("Enter commission width: "))
@@ -89,18 +109,20 @@ class Peer:
             except ValueError:
                 self.logger.error("Invalid input. Please enter a valid float.")
 
-    def generate_piece(self, commission: Artwork):
+    def generate_fragment(self, commission: Artwork):
         """Generate a piece of the artwork"""
+
         self.logger.info("Generating fragment")
         return commission
 
-    def callback_function(self, key, value):
+    async def data_stored_callback(self, key, value):
         """
         Callback function for when data is stored.
         Args:
             key (bytes): The key to store.
             value (bytes): The value to store.
         """
+
         self.logger.info("Data stored with key: %s", key)
         self.logger.info("Data stored with value: %s", value)
         artwork_object = pickle.loads(value)
@@ -110,14 +132,24 @@ class Peer:
             self.logger.info("Commission height: %f", artwork_object.height)
             self.logger.info("Commission wait time: %s", artwork_object.wait_time)
             if not artwork_object.commission_complete:
-                fragment = self.generate_piece(artwork_object)
-                self.node.set(fragment.get_key(), pickle.dumps(fragment))
+                fragment = self.generate_fragment(artwork_object)
+                try:
+                    set_success = await self.node.set(
+                        fragment.get_key(), pickle.dumps(fragment)
+                    )
+                    if set_success:
+                        self.logger.info("Fragment sent")
+                    else:
+                        self.logger.error("Fragment failed to send")
+                except TypeError:
+                    self.logger.error("Fragment type is not pickleable")
 
     async def connect_to_network(self):
         """
         Connect to the kademlia network.
         """
-        self.node = self.kdm.network.Server(self.callback_function)
+
+        self.node = self.kdm.network.NotifyingServer(self.data_stored_callback)
         await self.node.listen(self.port)
         if self.network_ip_address is not None:
             await self.node.bootstrap(
@@ -128,6 +160,7 @@ class Peer:
 
 async def main():
     """Main function"""
+
     logging.basicConfig(
         format="%(asctime)s %(name)s %(levelname)s | %(message)s", level=logging.INFO
     )
