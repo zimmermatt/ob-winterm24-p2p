@@ -9,6 +9,7 @@ import string
 import random
 import hashlib
 from datetime import datetime, timedelta
+from commission.constraint import Constraint
 
 
 class Artwork:
@@ -16,20 +17,29 @@ class Artwork:
     Class to manage artwork commissions
     """
 
-    def __init__(self, width: float, height: float, wait_time: timedelta):
+    def __init__(
+        self,
+        width: float,
+        height: float,
+        wait_time: timedelta,
+        constraint: Constraint = None,
+    ):
         """
         Initializes an instance of the Artwork class.
         - width (float): The width of the artwork in pixels.
         - height (float): The height of the artwork in pixels.
         - wait_time (timedelta): The wait time for the artwork as a timedelta.
+        - constraints (list[Constraint]): Constraints set to the artwork.
         """
         self.width = width
         self.height = height
         self.wait_time = wait_time
         self.commission_complete = False
+        self.constraint = constraint
         self.key = self.generate_key()
         start_time = datetime.now()
         self.end_time = start_time + self.wait_time
+        self.trade_status = {}
 
     def generate_key(self):
         """
@@ -54,9 +64,36 @@ class Artwork:
         """
         return self.key
 
+    def get_constraint(self):
+        """
+        Returns the constraint for the artwork.
+        """
+        return self.constraint
+
+    def set_constraint(self, constraint: Constraint):
+        """
+        Set a constraint to the artwork.
+        """
+        self.constraint = constraint
+        return self
+
     def set_complete(self):
         """
         Sets the commission status to complete.
         """
         self.commission_complete = True
+        return self
+
+    def set_trade_accepted(self, peer):
+        """
+        Sets the trade status to accepted for the given peer.
+        """
+        self.trade_status[peer] = "accepted"
+        return self
+
+    def set_trade_rejected(self, peer):
+        """
+        Sets the trade status to rejected for the given peer.
+        """
+        self.trade_status[peer] = "rejected"
         return self

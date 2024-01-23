@@ -2,7 +2,7 @@
 """ This module contains the NewServer class. """
 
 from kademlia.network import Server
-from protocol import NewProtocol
+from server.protocol import NewProtocol
 
 
 class NewServer(Server):
@@ -21,21 +21,19 @@ class NewServer(Server):
 
     """
 
-    def __init__(self, ksize, alpha, id, storage, store_callback):
+    def __init__(self, store_callback, ksize=20, alpha=3):
         """
         Initializes a new instance of the NewServer class.
 
         Args:
             ksize (int): The size of the k-buckets in the Kademlia DHT.
             alpha (int): The concurrency parameter for network operations.
-            id (bytes): The ID of the server node.
-            storage (Storage): The storage object used to store and retrieve data.
             store_callback (callable): A callback function called when data is stored.
 
         """
         self.store_callback = store_callback
-        # Call the parent class's init with the new protocol
-        super().__init__(ksize, alpha, id, storage)
+        # Call the parent class's __init__ with the new protocol
+        super().__init__(ksize, alpha)
 
     def _create_protocol(self):
         """

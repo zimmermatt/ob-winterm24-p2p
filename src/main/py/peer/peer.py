@@ -10,10 +10,8 @@ import ipaddress
 import pickle
 import logging
 import sys
-import threading
-import kademlia
+import server as kademlia
 from commission.artwork import Artwork
-from server.protocol import Protocol
 
 
 class Peer:
@@ -45,33 +43,38 @@ class Peer:
         self.deadline_timers = {}
         self.node = None
 
-    def send_deadline_reached(self, commission: Artwork) -> None:
+    async def send_deadline_reached(self, commission: Artwork) -> None:
         """
         Mark the commission as complete, publish it on kademlia, and remove it from the list.
         """
         commission.set_complete()
-        self.node.set(commission.get_key(), pickle.dumps(commission))
+        await self.node.set(commission.get_key(), pickle.dumps(commission))
 
-    def setup_deadline_timer(self, commission: Artwork) -> None:
+    async def setup_deadline_timer(self, commission: Artwork) -> None:
         """
         Schedule the deadline notice for the commission.
         """
+
+        async def deadline_reached():
+            """Send a notice that the deadline has been reached."""
+            await self.send_deadline_reached(commission)
+
         deadline_seconds = commission.get_remaining_time()
-        deadline_timer = threading.Timer(
-            deadline_seconds, self.send_deadline_reached, args=(commission,)
+        loop = asyncio.get_event_loop()
+        deadline_timer = loop.call_later(
+            deadline_seconds, asyncio.create_task, deadline_reached
         )
         self.deadline_timers[commission.get_key()] = deadline_timer
-        deadline_timer.start()
 
-    def send_commission_request(self, commission: Artwork) -> None:
+    async def send_commission_request(self, commission: Artwork) -> None:
         """
         Publish the commission on kademlia, add it to the list, and schedule the deadline notice.
         """
-        self.node.set(commission.get_key(), pickle.dumps(commission))
+        await self.node.set(commission.get_key(), pickle.dumps(commission))
         self.commissions.append(commission)
-        self.setup_deadline_timer(commission)
+        await self.setup_deadline_timer(commission)
 
-    def commission_art_piece(self) -> None:
+    async def commission_art_piece(self) -> None:
         """
         Get commission details from user input, create a commission, and send the request.
         """
@@ -81,28 +84,54 @@ class Peer:
                 height = float(input("Enter commission height: "))
                 wait_time = float(input("Enter wait time in seconds: "))
                 commission = Artwork(width, height, timedelta(seconds=wait_time))
-                self.send_commission_request(commission)
+                await self.send_commission_request(commission)
                 break
             except ValueError:
                 self.logger.error("Invalid input. Please enter a valid float.")
 
-    def generate_fragment(self) -> None:
+    def send_trade_acceptance(self, commission: Artwork):
         """
-        Trigger function from Fragment class to generate fragments
+        Send a trade acceptance to the commission.
         """
+        self.logger.info("Sending trade acceptance")
+        commission.set_trade_accepted()
 
-    def recieve_fragment(self) -> None:
+    def send_trade_rejection(self, commission: Artwork):
         """
-        Originator recieves fragment from contributor
+        Send a trade rejection to the commission.
         """
-        # if we haven't reached the deadline (Artwork)
-        # recieve fragment (add to list to merge? check pull request)
+        self.logger.info("Sending trade rejection")
+        commission.set_trade_rejected()
+
+    def generate_piece(self, commission: Artwork):
+        """Generate a piece of the artwork"""
+        self.logger.info("Generating fragment")
+        return commission
+
+    def callback_function(self, key, value):
+        """
+        Callback function for when data is stored.
+        Args:
+            key (bytes): The key to store.
+            value (bytes): The value to store.
+        """
+        self.logger.info("Data stored with key: %s", key)
+        self.logger.info("Data stored with value: %s", value)
+        artwork_object = pickle.loads(value)
+        if isinstance(artwork_object, Artwork):
+            self.logger.info("Received commission request")
+            self.logger.info("Commission width: %f", artwork_object.width)
+            self.logger.info("Commission height: %f", artwork_object.height)
+            self.logger.info("Commission wait time: %s", artwork_object.wait_time)
+            if not artwork_object.commission_complete:
+                fragment = self.generate_piece(artwork_object)
+                self.node.set(fragment.get_key(), pickle.dumps(fragment))
 
     async def connect_to_network(self):
         """
         Connect to the kademlia network.
         """
-        self.node = self.kdm.network.Server()
+        self.node = self.kdm.network.Server(self.callback_function)
         await self.node.listen(self.port)
         if self.network_ip_address is not None:
             await self.node.bootstrap(
@@ -123,7 +152,7 @@ async def main():
         address = int(sys.argv[2])
     peer = Peer(port_num, address, kademlia)
     await peer.connect_to_network()
-    peer.commission_art_piece()
+    await peer.commission_art_piece()
 
 
 if __name__ == "__main__":
