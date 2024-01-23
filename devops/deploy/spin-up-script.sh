@@ -22,6 +22,7 @@ export PYTHONPATH=../../src/main/py
 
 port=$PSTART
 
+# Loop for spinning up
 while [ ${COUNT} -le ${NUM_PORTS} ]
 do
   #Check for Open ports, if open then OK, else continue
@@ -30,15 +31,16 @@ do
     # Generating keys
     ssh-keygen -t ed25519 -f "keys/node${COUNT}" -N ""
 
+    # Cutting the keys from the key files
     private_key=$(cat keys/node${COUNT} | awk -F '-----' '{print $1}' | tr -d '\n')
     public_key=$(cat keys/node${COUNT}.pub | awk -F '-----' '{print $1}' | tr -d '\n')
+    
     # Handling putting the port information and the keys into the peer list
     echo "Starting on port $port"
-    echo $public_key
+    echo "${COUNT} ,${port} ,${private_key} ,${public_key}" >> $PEER_FILE
 
     # Calling server
-    #python3 -m sample_module.udp_server ${port} &
-    echo "${COUNT} ,${port} ,${private_key} ,${public_key}" >> $PEER_FILE
+    python3 -m sample_module.udp_server ${port} &
     ((port++))
     ((COUNT++))
   else
