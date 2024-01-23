@@ -89,3 +89,5 @@ ENV/
 # Rope project settings
 .ropeproject
 
+# Spin up script
+devops/deploy/port_list.txt
