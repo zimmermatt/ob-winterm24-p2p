@@ -9,23 +9,33 @@ import hashlib
 import json
 
 
-class Transaction:
-    """
-    Class to manage transactions between Art Collectors.
-    """
+# class Transaction:
+#     """
+#     Class to manage transactions between Art Collectors.
+#     """
 
-    def __init__(self, previous_owner, new_owner, artwork):
-        """Initialize the previous owner, new owner, and artwork for the transaction."""
-        self.previous_owner = previous_owner
-        self.new_owner = new_owner
-        self.artwork = artwork
+#     def __init__(self, previous_owner, new_owner, artwork):
+#         """Initialize the previous owner, new owner, and artwork for the transaction."""
+#         self.previous_owner = previous_owner
+#         self.new_owner = new_owner
+#         self.artwork = artwork
+
+#     def get_previous_owner(self):
+#         """Return the previous owner."""
+#         return self.previous_owner
+
+#     def get_new_owner(self):
+#         """Return the new owner."""
+#         return self.new_owner
 
 
 class Ledger:
     """Class to manage ledgers for Art Collectors."""
 
     def __init__(self):
-        """Initialize the ledger by creating an empty list of transactions and setting the first last_hash to None."""
+        """Initialize the ledger by creating an empty list of transactions and
+        setting the last_hash to None."""
+
         self.transactions = []
         self.last_hash = None
 

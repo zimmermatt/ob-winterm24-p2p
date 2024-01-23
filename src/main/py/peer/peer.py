@@ -42,6 +42,7 @@ class Peer:
         self.commissions = []
         self.deadline_timers = {}
         self.node = None
+        self.art_collection = []
 
     async def send_deadline_reached(self, commission: Artwork) -> None:
         """
@@ -89,10 +90,12 @@ class Peer:
             except ValueError:
                 self.logger.error("Invalid input. Please enter a valid float.")
 
+    # potentially combine acceptance and rejection into one function
     def send_trade_acceptance(self, commission: Artwork):
         """
         Send a trade acceptance to the commission.
         """
+
         self.logger.info("Sending trade acceptance")
         commission.set_trade_accepted()
 
@@ -100,11 +103,37 @@ class Peer:
         """
         Send a trade rejection to the commission.
         """
+
         self.logger.info("Sending trade rejection")
         commission.set_trade_rejected()
 
+    def add_to_art_collection(self, commission: Artwork):
+        """
+        Add the commission to the art collection.
+        """
+
+        self.logger.info("Adding commission to art collection")
+        self.art_collection.append(commission)
+
+    def remove_from_art_collection(self, commission: Artwork):
+        """
+        Remove the commission from the art collection.
+        """
+
+        self.logger.info("Removing commission from art collection")
+        self.art_collection.remove(commission)
+
+    def send_trade_complete(self, commission: Artwork):
+        """
+        Send a trade complete notice to the commission.
+        """
+
+        self.logger.info("Sending trade complete notice")
+        commission.set_trade_complete()
+
     def generate_piece(self, commission: Artwork):
         """Generate a piece of the artwork"""
+
         self.logger.info("Generating fragment")
         return commission
 
