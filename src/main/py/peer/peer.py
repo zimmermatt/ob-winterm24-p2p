@@ -64,6 +64,7 @@ class Peer:
         """
         Schedule the deadline notice for the commission.
         """
+
         async def deadline_reached():
             """Send a notice that the deadline has been reached."""
             await self.send_deadline_reached(commission)
@@ -73,6 +74,7 @@ class Peer:
             deadline_seconds, asyncio.create_task, deadline_reached
         )
         self.deadline_timers[commission.get_key()] = deadline_timer
+
     async def send_commission_request(self, commission: Artwork) -> None:
         """
         Publish the commission on kademlia, add it to the list, and schedule the deadline notice.
@@ -141,6 +143,8 @@ class Peer:
                         self.logger.error("Fragment failed to send")
                 except TypeError:
                     self.logger.error("Fragment type is not pickleable")
+        else:
+            self.logger.error("Invalid object received")
 
     async def connect_to_network(self):
         """
