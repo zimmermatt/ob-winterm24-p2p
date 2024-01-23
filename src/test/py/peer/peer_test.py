@@ -9,7 +9,6 @@ import logging
 import pickle
 import unittest
 from unittest.mock import patch, MagicMock, AsyncMock
-from threading import Timer
 from peer.peer import Peer
 
 
@@ -22,7 +21,7 @@ class MockNode:
         """Initializes an instance of the MockNode class."""
         self.data_store = {}
 
-    def set(self, key, value):
+    async def set(self, key, value):
         """Stores a value based on the key."""
         self.data_store[key] = value
 
@@ -81,19 +80,15 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.peer.node.bootstrap.assert_called_once()
 
     @patch("builtins.input", side_effect=["10", "20", "10"])
-    @patch(
-        "threading.Timer",
-        side_effect=lambda delay, func, args: Timer(0, func, args),
-    )
-    def test_commission_art_piece(self, mock_input, mock_timer):
+    async def test_commission_art_piece(self, mock_input):
         """
         Test case for the commission_art_piece method of the Peer class.
         This test verifies that the commission_art_piece method correctly adds a commission,
         publishes it on Kademlia, and schedules and sends a deadline notice.
         """
-        self.test_logger.debug(mock_input, mock_timer)
+        self.test_logger.debug(mock_input)
         self.peer.node = self.mock_node
-        self.peer.commission_art_piece()
+        await self.peer.commission_art_piece()
         self.assertEqual(len(self.peer.commissions), 1)
         commission = self.peer.commissions[0]
         self.assertEqual(commission.width, 10)

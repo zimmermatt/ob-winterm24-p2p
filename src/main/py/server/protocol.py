@@ -1,7 +1,5 @@
 """
 Module for Kademlia library rpc_store() callback
-
-ADD HERE
 """
 from kademlia.protocol import KademliaProtocol
 
