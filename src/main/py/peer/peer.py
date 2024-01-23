@@ -170,7 +170,7 @@ async def main():
     if len(sys.argv) == 2:
         address = None
     else:
-        address = int(sys.argv[2])
+        address = sys.argv[2]
     peer = Peer(port_num, address, kademlia)
     await peer.connect_to_network()
     await peer.commission_art_piece()
