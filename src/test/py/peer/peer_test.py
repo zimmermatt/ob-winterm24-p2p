@@ -65,6 +65,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             "127.0.0.1:5000",
             self.mock_kdm,
         )
+        self.deadline_task = None
 
     def test_initialization(self):
         """
@@ -91,19 +92,26 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         This test verifies that the commission_art_piece method correctly adds a commission,
         publishes it on Kademlia, and schedules and sends a deadline notice.
         """
-        self.test_logger.debug(mock_input)
-        self.peer.node = self.mock_node
-        commission = await self.peer.commission_art_piece()
-        self.assertEqual(commission.width, 10)
-        self.assertEqual(commission.height, 20)
-        self.assertLessEqual(commission.wait_time, timedelta(seconds=10))
-        self.mock_node.set.assert_called_with(
-            commission.get_key(), pickle.dumps(commission)
-        )
-        # Check that send_deadline_reached was called, which in turn calls our node's set method
-        self.mock_node.set.assert_called_with(
-            commission.get_key(), pickle.dumps(commission)
-        )
+        with patch(
+            "asyncio.get_event_loop",
+            return_value=MagicMock(
+                call_later=lambda *args: setattr(
+                    self, "deadline_task", asyncio.create_task(args[2])
+                )
+            ),
+        ):
+            self.test_logger.debug(mock_input)
+            self.peer.node = self.mock_node
+            commission = await self.peer.commission_art_piece()
+            self.mock_node.set.assert_called_with(
+                commission.get_key(), pickle.dumps(commission)
+            )
+            self.assertEqual(commission.width, 10)
+            self.assertEqual(commission.height, 20)
+            self.assertLessEqual(commission.wait_time, timedelta(seconds=10))
+            # Check that send_deadline_reached was called, which in turn calls our node's set method
+            await self.deadline_task
+            self.assertEqual(self.mock_node.set.call_count, 2)
 
 
 if __name__ == "__main__":
