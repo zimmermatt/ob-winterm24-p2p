@@ -16,7 +16,13 @@ class Artwork:
     Class to manage artwork commissions
     """
 
-    def __init__(self, width: float, height: float, wait_time: timedelta, originator_public_key: str = ""):
+    def __init__(
+        self,
+        width: float,
+        height: float,
+        wait_time: timedelta,
+        originator_public_key: str = "",
+    ):
         """
         Initializes an instance of the Artwork class.
         - width (float): The width of the artwork in pixels.
