@@ -15,18 +15,12 @@ from commission.constraint import Constraint
 
 class TradeStatus(Enum):
     """
-    Enum to manage trade status for artwork.
-    Peers who auction completed Artworks will send a message to bidders (REJECTED or ACCEPTED).
-    Peers who bid on Artworks will send a message to the auctioneer (RECIEVED).
-    Once the auctioner Peer recieves a message from a bidder as RECIEVED, if that Peer recieved
-    a REJECTED message, it will set the trade status of that Peer to COMPLETED.
-    If the Peer had recieved an ACCEPTED message, it will add and remove from art collections,
-    transfer ledgers, and then set the trade status of that Peer to COMPLETED.
+    Enum to manage trade status
     """
 
     ACCEPTED = "accepted"
     REJECTED = "rejected"
-    RECIEVED = "recieved"
+    RECEIVED = "received"
     COMPLETED = "completed"
 
 
@@ -58,7 +52,7 @@ class Artwork:
         self.key = self.generate_key()
         start_time = datetime.now()
         self.end_time = start_time + self.wait_time
-        self.trade_status = {}
+        # self.trade_status = {}
 
     def generate_key(self):
         """
@@ -109,27 +103,28 @@ class Artwork:
         self.commission_complete = True
         return self
 
-    def set_trade_status(self, peer, status: TradeStatus):
-        """
-        Sets the trade status for the given peer.
-        """
+    # def set_trade_status(self, peer, status: TradeStatus):
+    #     """
+    #     Sets the trade status for the given peer.
+    #     """
 
-        self.trade_status[peer] = status.value
-        return self
+    #     self.trade_status[peer] = status.value
+    #     return self
 
-    def get_trade_status(self, peer):
-        """
-        Returns the trade status for the given peer.
-        """
+    # def get_trade_status(self, peer):
+    #     """
+    #     Returns the trade status for the given peer.
+    #     """
 
-        return self.trade_status[peer]
+    #     return self.trade_status[peer]
 
-    def is_all_trade_complete(self):
-        """
-        Returns True if all trades, whether it be an acceptance or rejection, are complete, False otherwise.
-        """
+    # def is_all_trade_complete(self):
+    #     """
+    #     Returns True if all trades, whether it be an acceptance or rejection, are complete,
+    #     False otherwise.
+    #     """
 
-        return all(
-            status == TradeStatus.COMPLETED.value
-            for status in self.trade_status.values()
-        )
+    #     return all(
+    #         self.get_trade_status(peer) == TradeStatus.COMPLETED.value
+    #         for peer in self.trade_status
+    #     )

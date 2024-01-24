@@ -8,8 +8,8 @@ import unittest
 import asyncio
 import hashlib
 
-from unittest.mock import Mock
-from server.network import NewServer
+from unittest.mock import AsyncMock
+from server.network import NotifyingServer
 
 
 class TestNewServer(unittest.IsolatedAsyncioTestCase):
@@ -17,20 +17,20 @@ class TestNewServer(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self):
         """Create instances of NewServer"""
-        self.mock_store_callback = Mock()
+        self.mock_store_callback = AsyncMock()
 
-        self.node1 = NewServer(self.mock_store_callback)
-        self.node2 = NewServer(self.mock_store_callback)
+        self.node1 = NotifyingServer(self.mock_store_callback)
+        self.node2 = NotifyingServer(self.mock_store_callback)
 
     def test_init(self):
         """Test the __init__ method of NewServer"""
-        self.assertEqual(self.node1.store_callback, self.mock_store_callback)
+        self.assertEqual(self.node1.data_stored_callback, self.mock_store_callback)
 
     async def test_store(self):
         """Test the store method of NewServer"""
-        await self.node1.listen(8468)
-        await self.node2.listen(8469)
-        await self.node2.bootstrap([("127.0.0.1", 8468)])
+        await self.node1.listen(50000)
+        await self.node2.listen(50001)
+        await self.node2.bootstrap([("127.0.0.1", 50000)])
 
         key = "key"
         key_hash = hashlib.sha1(key.encode()).digest()
