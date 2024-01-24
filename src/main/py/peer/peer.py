@@ -12,6 +12,7 @@ import logging
 import sys
 import server as kademlia
 from commission.artwork import Artwork
+from commission.artwork import TradeStatus
 
 
 class Peer:
@@ -164,7 +165,23 @@ class Peer:
         """
 
         self.logger.info("Sending trade rejection")
-        commission.set_trade_rejected()
+        commission.set_trade_status(TradeStatus.REJECTED)
+
+    def send_trade_acceptance(self, commission: Artwork):
+        """
+        Send a trade acceptance to the commission.
+        """
+
+        self.logger.info("Sending trade acceptance")
+        commission.set_trade_status(TradeStatus.ACCEPTED)
+
+    def send_trade_received(self, commission: Artwork):
+        """
+        Send a trade received notice to the commission.
+        """
+
+        self.logger.info("Sending trade received notice")
+        commission.set_trade_status(TradeStatus.RECEIVED)
 
     def add_to_art_collection(self, commission: Artwork):
         """
