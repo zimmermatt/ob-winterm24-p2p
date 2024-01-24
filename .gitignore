@@ -91,3 +91,6 @@ ENV/
 
 # Spin up script
 devops/deploy/port_list.txt
+
+# VSCode directory
+/.vscode
