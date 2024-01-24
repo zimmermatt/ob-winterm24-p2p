@@ -159,29 +159,50 @@ class Peer:
             )
         self.logger.info("Running server on port %d", self.port)
 
-    def send_trade_rejection(self, commission: Artwork):
+    # def send_trade_rejection(self, commission: Artwork):
+    #     """
+    #     Send a trade rejection to the commission.
+    #     """
+
+    #     self.logger.info("Sending trade rejection")
+    #     commission.set_trade_status(TradeStatus.REJECTED)
+
+    # def send_trade_acceptance(self, commission: Artwork):
+    #     """
+    #     Send a trade acceptance to the commission.
+    #     """
+
+    #     self.logger.info("Sending trade acceptance")
+    #     commission.set_trade_status(TradeStatus.ACCEPTED)
+
+    def send_trade_status(self, commission: Artwork, status: TradeStatus):
         """
-        Send a trade rejection to the commission.
+        Send a trade status to the commission.
         """
 
-        self.logger.info("Sending trade rejection")
-        commission.set_trade_status(TradeStatus.REJECTED)
+        self.logger.info("Sending trade status: %s", status)
+        commission.set_trade_status(status)
 
-    def send_trade_acceptance(self, commission: Artwork):
+    def reply_trade_received(self, commission: Artwork):
         """
-        Send a trade acceptance to the commission.
-        """
-
-        self.logger.info("Sending trade acceptance")
-        commission.set_trade_status(TradeStatus.ACCEPTED)
-
-    def send_trade_received(self, commission: Artwork):
-        """
-        Send a trade received notice to the commission.
+        Reply with a trade received notice to the commission.
         """
 
         self.logger.info("Sending trade received notice")
         commission.set_trade_status(TradeStatus.RECEIVED)
+
+    def swap_art(self, other_peer, my_art: Artwork, their_art: Artwork):
+        """
+        Swap my_art from this peer's collection with their_art from other_peer's collection.
+        """
+
+        self.logger.info("Swapping %s with %s's %s", my_art, other_peer, their_art)
+
+        self.remove_from_art_collection(my_art)
+        other_peer.add_to_art_collection(my_art)
+
+        other_peer.remove_from_art_collection(their_art)
+        self.add_to_art_collection(their_art)
 
     def add_to_art_collection(self, commission: Artwork):
         """
