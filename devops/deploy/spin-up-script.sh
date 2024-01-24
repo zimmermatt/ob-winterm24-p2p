@@ -37,7 +37,7 @@ do
     
     # Handling putting the port information and the keys into the peer list
     echo "Starting on port $port"
-    echo "${COUNT} ,${port} ,${private_key} ,${public_key}" >> $PEER_FILE
+    echo "${COUNT},${port},${private_key},${public_key}" >> $PEER_FILE
 
     # Calling server
     python3 -m sample_module.udp_server ${port} &
