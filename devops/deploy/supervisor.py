@@ -5,7 +5,7 @@ import subprocess
 # Placeholder for function to recover nodes recover_node(host, port)
 def recover_node(node_number, host, port):
     key_file = "node" + str(node_number)
-    subprocess.run(['python3', '-m', 'peer.peer', port, key_file, host, '&')
+    subprocess.run(['python3', '-m', 'peer.peer', port, key_file, host, '&'])
 
 # Function to check if a node is alive
 async def ping_node(node_number, host, port):
