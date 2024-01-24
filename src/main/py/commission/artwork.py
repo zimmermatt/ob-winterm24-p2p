@@ -19,17 +19,17 @@ class Artwork:
 
     def __init__(
         self,
-        width: float,
-        height: float,
+        width: int,
+        height: int,
         wait_time: timedelta,
         constraint: Constraint = None,
     ):
         """
         Initializes an instance of the Artwork class.
-        - width (float): The width of the artwork in pixels.
+        - width (int): The width of the artwork in pixels.
         - height (float): The height of the artwork in pixels.
         - wait_time (timedelta): The wait time for the artwork as a timedelta.
-        - constraints (list[Constraint]): Constraints set to the artwork.
+        - constraint (Constraint): Constraint instance set to the artwork.
         """
         self.width = width
         self.height = height

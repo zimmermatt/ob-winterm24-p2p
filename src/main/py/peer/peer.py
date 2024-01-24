@@ -98,12 +98,11 @@ class Peer:
             )
         self.logger.info("Running server on port %d", self.port)
 
-
     def merge_canvas(self, width: int, height: int, fragment) -> Image.Image:
         """
         Merge fragments received from a Contributor Artist Peer into a complete colored canvas
         """
-        canvas = Image.new(mode="RGB", size=(width, height), color=(255,255,255))
+        canvas = Image.new(mode="RGB", size=(width, height), color=(255, 255, 255))
         pixels = canvas.load()
 
         for pixel in fragment:
