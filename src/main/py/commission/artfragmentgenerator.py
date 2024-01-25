@@ -7,89 +7,82 @@ ArtFragmentGenerator class allows us to create an instance of ArtFragment
 
 import logging
 from random import randrange
-from commission.artwork import Artwork
-from commission.constraint import Constraint
+from collections import namedtuple
+from commission.artwork import Artwork, Constraint, Pixel
 from commission.artfragment import ArtFragment
-from drawing.pixel import Pixel
 from drawing.coordinates import Coordinates
 
+Subcanvas = namedtuple("SubCanvas", ["coordinates", "dimensions"])
+Subcanvas.__annotations__ = {"coordinates": Coordinates, "dimensions": tuple[int, int]}
 
-class ArtFragmentGenerator:
+logger = logging.getLogger("ArtFragmentGenerator")
+
+
+def generate_fragment(artwork: Artwork, contributor: str):
     """
-    Class to generate ArtFragment
+    Generates an ArtFragment instance
+    - artwork (Artwork): Artwork that the ArtFragment is intended for.
+    - contributor (str): Peer ID that created the ArtFragment.
     """
+    subcanvas = generate_subcanvas(artwork.width, artwork.height)
+    constraint = artwork.constraint
 
-    logger = logging.getLogger("ArtFragmentGenerator")
+    pixels = generate_pixels(subcanvas, constraint)
+    fragment = ArtFragment(artwork, contributor, pixels)
+    return fragment
 
-    def __init__(self):
-        """
-        Initializes an instance of the ArtFragmentGenerator class.
-        """
 
-    def generate_fragment(self, artwork: Artwork, contributor: str):
-        """
-        Generates a ArtFragment instance
-        - artwork (Artwork): Artwork that the ArtFragment is intended for.
-        - contributor (str): Peer ID that created the ArtFragment.
-        """
-        # generate starting (x,y) coordinates and width, height
-        subcanvas = self.generate_subcanvas(artwork.width, artwork.height)
-        constraint = artwork.get_constraint()
+def generate_subcanvas(width: int, height: int):
+    """
+    Generates starting (x,y) coordinates with width and height adhering to artwork
+    """
+    x_coordinate = randrange(0, width)
+    y_coordinate = randrange(0, height)
+    coordinates = Coordinates(x_coordinate, y_coordinate)
+    bounds = coordinates.create_bounds(width, height)
 
-        # generate set of Pixel with color constraint adherence.
-        pixels = self.generate_pixels(subcanvas, constraint)
+    subcanvas_width = randrange(1, bounds[0])
+    subcanvas_height = randrange(1, bounds[1])
 
-        # generate ArtFragment
-        fragment = ArtFragment(artwork, contributor, pixels)
-        return fragment
+    subcanvas = Subcanvas(
+        coordinates=coordinates, dimensions=(subcanvas_width, subcanvas_height)
+    )
+    return subcanvas
 
-    def generate_subcanvas(self, width: int, height: int):
-        """
-        Generates starting (x,y) coordinates with width and height adhering to artwork
-        """
-        x_coordinate = randrange(0, width)
-        y_coordinate = randrange(0, height)
-        coordinates = Coordinates(x_coordinate, y_coordinate)
-        bounds = coordinates.create_bounds(width, height)
 
-        subcanvas_width = randrange(1, bounds[0])
-        subcanvas_height = randrange(1, bounds[1])
+def generate_pixels(
+    subcanvas: tuple[tuple[int, int], tuple[int, int]], constraint: Constraint
+):
+    """
+    Generate a list of pixel info that adheres to coordiantes, dimensions, constraints
 
-        return ((x_coordinate, y_coordinate), (subcanvas_width, subcanvas_height))
+    TODO:
+    - implement address-based adherence
+    - implement line type adherence
+    """
+    coordinates = subcanvas.coordinates
+    dimensions = subcanvas.dimensions
+    color_constraint = constraint.color
 
-    def generate_pixels(
-        self, subcanvas: tuple[tuple[int, int], tuple[int, int]], constraint: Constraint
-    ):
-        """
-        Generate a list of pixel info that adheres to coordiantes, dimensions, constraints
+    x_coordinate = coordinates.x
+    y_coordinate = coordinates.y
 
-        TODO:
-        - implement address-based adherence
-        - implement line type adherence
-        """
-        coordinates = subcanvas[0]
-        dimensions = subcanvas[1]
-        color_constraint = constraint.get_color()
+    width = dimensions[0]
+    height = dimensions[1]
 
-        x_coordinate = coordinates[0]
-        y_coordinate = coordinates[1]
+    # generate the set of pixels to occupy
+    num_pixels = randrange(0, width * height)
+    x_bound = x_coordinate + width
+    y_bound = y_coordinate + height
+    set_pixels = set()
 
-        width = dimensions[0]
-        height = dimensions[1]
+    while num_pixels > 0:
+        coordinates = Coordinates(
+            randrange(x_coordinate, x_bound), randrange(y_coordinate, y_bound)
+        )
 
-        # generate the set of pixels to occupy
-        num_pixels = randrange(0, width * height)
-        x_bound = x_coordinate + width
-        y_bound = y_coordinate + height
-        set_pixels = set()
+        pixel = Pixel(coordinates, color_constraint)
+        set_pixels.add(pixel)
+        num_pixels -= 1
 
-        while num_pixels > 0:
-            coordinates = Coordinates(
-                randrange(x_coordinate, x_bound), randrange(y_coordinate, y_bound)
-            )
-
-            pixel = Pixel(coordinates, color_constraint)
-            set_pixels.add(pixel)
-            num_pixels -= 1
-
-        return set_pixels
+    return set_pixels

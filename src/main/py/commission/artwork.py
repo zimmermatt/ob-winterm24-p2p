@@ -8,8 +8,15 @@ Artwork class allows us to create a commission, generate a file descriptor
 import string
 import random
 import hashlib
+from collections import namedtuple
 from datetime import datetime, timedelta
-from commission.constraint import Constraint
+from drawing.coordinates import Coordinates
+from drawing.color import Color
+
+Pixel = namedtuple("Pixel", ["coordinates", "color"])
+Pixel.__annotations__ = {"coordiantes": Coordinates, "color": Color}
+Constraint = namedtuple("Constraint", ["color", "line_type"])
+Constraint.__annotations__ = {"color": Color, "line_type": str}
 
 
 class Artwork:
@@ -62,19 +69,6 @@ class Artwork:
         Returns the file descriptor for the artwork.
         """
         return self.key
-
-    def get_constraint(self):
-        """
-        Returns the constraint for the artwork.
-        """
-        return self.constraint
-
-    def set_constraint(self, constraint: Constraint):
-        """
-        Set a constraint to the artwork.
-        """
-        self.constraint = constraint
-        return self
 
     def set_complete(self):
         """

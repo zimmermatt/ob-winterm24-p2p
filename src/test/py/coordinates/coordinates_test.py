@@ -14,18 +14,34 @@ class TestCoordinates(unittest.TestCase):
 
     def setUp(self):
         """Create an instance of Coordinates"""
-        self.coordinates = Coordinates(-19, 9)
+        self.coordinates = Coordinates(0, 9)
 
-    def test_normalize_coordinates(self):
+    def test_check_coordinates(self):
         """Check if coordinates is normalized correctly"""
-        self.assertEqual(self.coordinates.x, 0)
-        self.assertEqual(self.coordinates.y, 9)
+        with self.assertRaises(Exception):
+            self.coordinates.check_coordinate(-1)
 
     def test_create_bounds(self):
         """Check if correct bounds are created"""
         width = randrange(1, 11)
         height = randrange(10, 41)
         bounds = self.coordinates.create_bounds(width, height)
+        self.assertLessEqual(bounds[0] - 1, width)
+        self.assertLessEqual(bounds[1] - 1, height)
+
+        # edge cases
+        zero_coordinates = Coordinates(0, 0)
+        bounds = zero_coordinates.create_bounds(width, height)
+        self.assertLessEqual(bounds[0] - 1, width)
+        self.assertLessEqual(bounds[1] - 1, height)
+
+        last_pixel_coordinates = Coordinates(width - 1, height - 1)
+        bounds = last_pixel_coordinates.create_bounds(width, height)
+        self.assertLessEqual(bounds[0] - 1, width)
+        self.assertLessEqual(bounds[1] - 1, height)
+
+        next_to_last_pixel_coordinates = Coordinates(width - 2, height - 2)
+        bounds = next_to_last_pixel_coordinates.create_bounds(width, height)
         self.assertLessEqual(bounds[0] - 1, width)
         self.assertLessEqual(bounds[1] - 1, height)
 

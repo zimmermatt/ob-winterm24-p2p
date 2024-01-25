@@ -6,9 +6,9 @@ Simple Test Module for the ArtFragmentGenerator class
 
 import unittest
 from datetime import timedelta
-from commission.artfragmentgenerator import ArtFragmentGenerator
+from commission.artfragmentgenerator import generate_subcanvas, generate_pixels
 from commission.artwork import Artwork
-from commission.constraint import Constraint
+from commission.artwork import Constraint
 from drawing.color import Color
 
 
@@ -17,28 +17,24 @@ class TestArtFragmentGenerator(unittest.TestCase):
 
     def setUp(self):
         """Create an instance of ArtFragmentGenerator based on an Artwork"""
-        self.artwork = Artwork(10, 20, timedelta(seconds=0.5))
-        constraint = Constraint(Color(-1, 8, 3, 400), "straight")
-        self.artwork.set_constraint(constraint)
-        self.artfragment_generator = ArtFragmentGenerator()
+        constraint = Constraint(Color(0, 8, 3, 255), "straight")
+        self.artwork = Artwork(10, 20, timedelta(seconds=0.5), constraint=constraint)
 
     def test_generate_subcanvas(self):
         """Test the generate_subcanvas method of ArtFragmentGenerator for bound adherence"""
         artwork = self.artwork
-        subcanvas = self.artfragment_generator.generate_subcanvas(
-            artwork.width, artwork.height
-        )
+        subcanvas = generate_subcanvas(artwork.width, artwork.height)
 
-        x_coordinate = subcanvas[0][0]
-        y_coordinate = subcanvas[0][0]
-        subcanvas_width = subcanvas[1][0]
-        subcanvas_height = subcanvas[1][1]
+        x_coordinate = subcanvas.coordinates.x
+        y_coordinate = subcanvas.coordinates.y
+        subcanvas_width = subcanvas.dimensions[0]
+        subcanvas_height = subcanvas.dimensions[1]
 
         width_bound = artwork.width - x_coordinate + 1
         height_bound = artwork.height - y_coordinate + 1
 
-        self.assertLessEqual(x_coordinate, artwork.width)
-        self.assertLessEqual(y_coordinate, artwork.height)
+        self.assertLess(x_coordinate, artwork.width)
+        self.assertLess(y_coordinate, artwork.height)
         self.assertLessEqual(subcanvas_width, width_bound)
         self.assertLessEqual(subcanvas_height, height_bound)
 
@@ -47,20 +43,16 @@ class TestArtFragmentGenerator(unittest.TestCase):
         Test the generate_pixel method of ArtFragmentGenerator for coordinate, color adherence
         """
         artwork = self.artwork
-        subcanvas = self.artfragment_generator.generate_subcanvas(
-            artwork.width, artwork.height
-        )
+        subcanvas = generate_subcanvas(artwork.width, artwork.height)
 
-        pixels = self.artfragment_generator.generate_pixels(
-            subcanvas, artwork.get_constraint()
-        )
-        color_constraint = artwork.get_constraint().get_color()
+        pixels = generate_pixels(subcanvas, artwork.constraint)
+        color_constraint = artwork.constraint.color
 
         for pixel in pixels:
             coordinates = pixel.coordinates
             color = pixel.color
-            self.assertLessEqual(coordinates.x, artwork.width)
-            self.assertLessEqual(coordinates.y, artwork.height)
+            self.assertLess(coordinates.x, artwork.width)
+            self.assertLess(coordinates.y, artwork.height)
             self.assertEqual(color, color_constraint)
 
 

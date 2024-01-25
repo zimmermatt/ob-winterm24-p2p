@@ -19,30 +19,24 @@ class Color:
         - b (int): blue channel value
         - a (int): alpha (opacity) channel value
         """
-        self.channels = self.normalize_color([r, g, b, a])
+        self.channels = self.check_color([r, g, b, a])
 
-    def normalize_color(self, channels):
+    def check_color(self, channels):
         """
         Create a valid color tuple based on input
         """
-        normalized_color = []
+        checked_color = []
         for channel in channels:
-            normalized_channel = self.normalize_chanel(channel)
-            normalized_color.append(normalized_channel)
-        return tuple(normalized_color)
+            checked_channel = self.check_channel(channel)
+            checked_color.append(checked_channel)
+        return tuple(checked_color)
 
-    def normalize_chanel(self, channel):
+    def check_channel(self, channel):
         """
-        If a channel < 0, make it 0. If it is > 255, make it 255.
+        If a channel < 0, or > 255, raise error.
         """
         if channel < 0:
-            channel = 0
-        elif channel > 255:
-            channel = 255
+            raise ValueError("channel value must be non-negative.")
+        if channel > 255:
+            raise ValueError("channel value must be less than 256.")
         return channel
-
-    def get_channels(self):
-        """
-        Get channels of color.
-        """
-        return self.channels

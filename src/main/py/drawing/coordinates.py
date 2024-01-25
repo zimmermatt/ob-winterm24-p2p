@@ -17,15 +17,15 @@ class Coordinates:
         - x (int): x-coordinate
         - y (int): y-coordinate
         """
-        self.x = self.normalize_coordinate(x)
-        self.y = self.normalize_coordinate(y)
+        self.x = self.check_coordinate(x)
+        self.y = self.check_coordinate(y)
 
-    def normalize_coordinate(self, coordinate):
+    def check_coordinate(self, coordinate):
         """
-        If coordinate < 0, make it 0.
+        If coordinate < 0, throws error
         """
         if coordinate < 0:
-            return 0
+            raise ValueError("coordinate must be greater than or equal to 0.")
         return coordinate
 
     def create_bounds(self, width, height):

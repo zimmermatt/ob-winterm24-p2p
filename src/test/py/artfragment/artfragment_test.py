@@ -6,10 +6,10 @@ Simple Test Module for the ArtFragment class
 
 import unittest
 from datetime import timedelta
-from commission.artfragmentgenerator import ArtFragmentGenerator
+from commission.artfragmentgenerator import generate_fragment
 from commission.artwork import Artwork
-from commission.constraint import Constraint
-from drawing.pixel import Pixel
+from commission.artwork import Constraint
+from commission.artwork import Pixel
 from drawing.color import Color
 
 
@@ -18,13 +18,9 @@ class TestArtFragment(unittest.TestCase):
 
     def setUp(self):
         """Create an instance of ArtFragment based on an Artwork"""
-        self.artwork = Artwork(10, 20, timedelta(seconds=0.5))
-        constraint = Constraint(Color(-1, 8, 3, 400), "straight")
-        self.artwork.set_constraint(constraint)
-        self.artfragment_generator = ArtFragmentGenerator()
-        self.artfragment = self.artfragment_generator.generate_fragment(
-            self.artwork, "1"
-        )
+        constraint = Constraint(Color(0, 8, 3, 255), "straight")
+        self.artwork = Artwork(10, 20, timedelta(seconds=0.5), constraint=constraint)
+        self.artfragment = generate_fragment(self.artwork, "1")
 
     def test_initialization(self):
         """Check if the basic attributes are initialized correctly"""
