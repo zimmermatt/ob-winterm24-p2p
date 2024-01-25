@@ -1,7 +1,7 @@
 """
 Module to manage a ledger for an Artwork.
 
-The Ledger class allows us to add owners...
+The Ledger class allows us to maintain a history of ownership for an Artwork.
 """
 
 from peer.peer import Peer
@@ -16,7 +16,7 @@ class Ledger:
 
         self.ledger_history = []
         self.curr_owner = None  # initialize it to the last owner or
-        #                    none if that owner doesn't exist (Originator)
+        #                         none if that owner doesn't exist (Originator)
 
     def add_owner(self, peer: Peer):
         """Add a new owner to a ledger."""
