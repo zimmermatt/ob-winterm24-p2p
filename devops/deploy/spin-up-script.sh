@@ -4,8 +4,8 @@
 # Setting up variables
 PSTART=${1:-50000}
 PEND=${2:-50050}
-PEER_FILE="peer_list1.txt"
-IP=127.0.0.1
+PEER_FILE="peer_list.txt"
+IP="127.0.0.1"
 COUNT=0
 ((NUM_PORTS=${PEND}-${PSTART}))
 
