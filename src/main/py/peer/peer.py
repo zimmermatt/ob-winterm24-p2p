@@ -6,15 +6,14 @@ Peer class allows us to join the network, commission artwork, and generate fragm
 """
 import asyncio
 from datetime import timedelta
+import hashlib
 import ipaddress
 import pickle
 import logging
 import sys
 import server as kademlia
 from commission.artwork import Artwork
-from commission.artcollection import TradeStatus, ArtCollection
-
-# create the pending list
+from commission.artcollection import ArtCollection
 
 
 class Peer:
@@ -22,14 +21,22 @@ class Peer:
 
     logger = logging.getLogger("Peer")
 
-    def __init__(self, port: int, peer_network_address: str, kdm) -> None:
+    def __init__(
+        self,
+        port: int,
+        key_filename: str,
+        peer_network_address: str,
+        kdm,
+    ) -> None:
         """
         Initialize the Peer class by joining the kademlia network.
 
         Params:
+        - port (int): The port number for the peer to listen on.
+        - public_key_filename (str): The filename of the public key.
+        - private_key_filename (str): The filename of the private key.
         - peer_network_address (str): String containing the IP address and port number of a peer
           on the network separated by a colon.
-        - port (int): The port number for the peer to listen on.
         """
         if peer_network_address is not None:
             try:
@@ -41,18 +48,17 @@ class Peer:
                     "Invalid network address. Please provide a valid network address."
                 ) from exc
         self.port = port
+        with open(f"{key_filename}.pub", "r", encoding="utf-8") as public_key_file:
+            self.public_key = public_key_file.read()
+        with open(key_filename, "r", encoding="utf-8") as private_key_file:
+            self.private_key = private_key_file.read()
         self.kdm = kdm
-        self.commissions = []
-        self.deadline_timers = {}
         self.node = None
-        self.art_collection = ArtCollection()
 
     async def send_deadline_reached(self, commission: Artwork) -> None:
         """
         Mark the commission as complete, publish it on kademlia, and remove it from the list.
         """
-
-        # handle cases when commission can't be pickekd
 
         commission.set_complete()
         try:
@@ -72,12 +78,11 @@ class Peer:
         """
 
         deadline_seconds = commission.get_remaining_time()
-        deadline_timer = asyncio.get_event_loop().call_later(
+        asyncio.get_event_loop().call_later(
             deadline_seconds,
             asyncio.create_task,
             self.send_deadline_reached(commission),
         )
-        self.deadline_timers[commission.get_key()] = deadline_timer
 
     async def send_commission_request(self, commission: Artwork) -> None:
         """
@@ -90,7 +95,6 @@ class Peer:
             )
             if set_success:
                 self.logger.info("Commission sent")
-                self.commissions.append(commission)
             else:
                 self.logger.error("Commission failed to send")
             await self.setup_deadline_timer(commission)
@@ -107,9 +111,14 @@ class Peer:
                 width = float(input("Enter commission width: "))
                 height = float(input("Enter commission height: "))
                 wait_time = float(input("Enter wait time in seconds: "))
-                commission = Artwork(width, height, timedelta(seconds=wait_time))
+                commission = Artwork(
+                    width,
+                    height,
+                    timedelta(seconds=wait_time),
+                    originator_public_key=self.public_key,
+                )
                 await self.send_commission_request(commission)
-                break
+                return commission
             except ValueError:
                 self.logger.error("Invalid input. Please enter a valid float.")
 
@@ -155,7 +164,10 @@ class Peer:
         Connect to the kademlia network.
         """
 
-        self.node = self.kdm.network.NotifyingServer(self.data_stored_callback)
+        self.node = self.kdm.network.NotifyingServer(
+            self.data_stored_callback,
+            node_id=hashlib.sha1(self.public_key.encode()).digest(),
+        )
         await self.node.listen(self.port)
         if self.network_ip_address is not None:
             await self.node.bootstrap(
@@ -163,107 +175,59 @@ class Peer:
             )
         self.logger.info("Running server on port %d", self.port)
 
-    def send_trade_status(self, commission: ArtCollection, status: TradeStatus):
-        """
-        Send the trade status to the commission.
-        """
-
-        self.logger.info("Sending trade status: %s", status)
-        self.art_collection.set_trade_status(commission, status)
-
-    def receive_trade_status(self, commission: ArtCollection):
-        """
-        Receive the trade status from the commission.
-        """
-
-        self.logger.info("Sending trade received notice")
-        self.art_collection.set_trade_status(commission, TradeStatus.RECEIVED)
-
-    def accepted_trade_handling(self, commission: ArtCollection):
-        """
-        Accept the trade.
-        """
-
-        self.logger.info("Handle trade acceptance")
-        commission.trade_accepted(self)
-
-    def rejected_trade_handling(self, commission: ArtCollection):
-        """
-        Reject the trade.
-        """
-
-        self.logger.info("Handle trade rejection")
-        commission.trade_rejected(self)
-
-    def complete_received_trade(self, commission: ArtCollection):
-        """
-        Update the trade status to completed.
-        """
-
-        self.logger.info("Sending trade complete notice")
-
-        commission.set_trade_status(TradeStatus.COMPLETED)
-
-    def get_trade_status(self, commission: ArtCollection):
-        """
-        Get the trade status for the commission.
-        """
-
-        self.logger.info("Getting trade status")
-        return self.art_collection.get_trade_status(commission)
-
-    def set_trade_status(self, commission: ArtCollection, status: TradeStatus):
-        """
-        Set the trade status for the commission.
-        """
-
-        self.logger.info("Setting trade status")
-        self.art_collection.set_trade_status(commission, status)
-
-    def swap_art(self, other_peer, my_art: ArtCollection, their_art: ArtCollection):
+    def swap_art(
+        self,
+        my_art_collection: ArtCollection,
+        their_art_collection: ArtCollection,
+        my_art: Artwork,
+        their_art: Artwork,
+    ):
         """
         Swap my_art from this peer's collection with their_art from other_peer's collection.
         """
 
-        # handle when art isn't in the collection
+        self.logger.info("Swapping artworks between auctioner and winning bidder.")
 
-        self.logger.info("Swapping %s with %s's %s", my_art, other_peer, their_art)
+        my_art_collection.remove_from_art_collection(my_art)
+        their_art_collection.add_to_art_collection(my_art)
 
-        self.remove_from_art_collection(my_art)
-        other_peer.add_to_art_collection(my_art)
+        their_art_collection.remove_from_art_collection(their_art)
+        my_art_collection.add_to_art_collection(their_art)
 
-        other_peer.remove_from_art_collection(their_art)
-        self.add_to_art_collection(their_art)
-
-    def add_to_art_collection(self, commission: ArtCollection):
+    def add_to_art_collection(self, artwork: Artwork, collection: ArtCollection):
         """
         Add the commission to the art collection.
         """
 
         self.logger.info("Adding commission to art collection")
-        self.art_collection.add_artwork(commission)
+        collection.add_to_art_collection(artwork)
 
-    def remove_from_art_collection(self, commission: ArtCollection):
+    def remove_from_art_collection(self, artwork: Artwork, collection: ArtCollection):
         """
         Remove the commission from the art collection.
         """
 
         self.logger.info("Removing commission from art collection")
-        self.art_collection.remove_artwork(commission)
+        collection.remove_from_art_collection(artwork)
 
 
 async def main():
-    """Main function"""
+    """Main function
+
+    Run the file with the following:
+    python3 peer.py <port_num> <key_filename> <address>
+    """
 
     logging.basicConfig(
         format="%(asctime)s %(name)s %(levelname)s | %(message)s", level=logging.INFO
     )
     port_num = sys.argv[1]
-    if len(sys.argv) == 2:
+    key_filename = sys.argv[2]
+    if len(sys.argv) == 3:
         address = None
     else:
         address = sys.argv[2]
-    peer = Peer(port_num, address, kademlia)
+    peer = Peer(port_num, key_filename, address, kademlia)
     await peer.connect_to_network()
     await peer.commission_art_piece()
 
