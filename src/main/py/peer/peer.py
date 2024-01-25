@@ -6,6 +6,7 @@ Peer class allows us to join the network, commission artwork, and generate fragm
 """
 import asyncio
 from datetime import timedelta
+import hashlib
 import ipaddress
 import pickle
 import logging
@@ -20,14 +21,22 @@ class Peer:
 
     logger = logging.getLogger("Peer")
 
-    def __init__(self, port: int, peer_network_address: str, kdm) -> None:
+    def __init__(
+        self,
+        port: int,
+        key_filename: str,
+        peer_network_address: str,
+        kdm,
+    ) -> None:
         """
         Initialize the Peer class by joining the kademlia network.
 
         Params:
+        - port (int): The port number for the peer to listen on.
+        - public_key_filename (str): The filename of the public key.
+        - private_key_filename (str): The filename of the private key.
         - peer_network_address (str): String containing the IP address and port number of a peer
           on the network separated by a colon.
-        - port (int): The port number for the peer to listen on.
         """
         if peer_network_address is not None:
             try:
@@ -39,9 +48,11 @@ class Peer:
                     "Invalid network address. Please provide a valid network address."
                 ) from exc
         self.port = port
+        with open(f"{key_filename}.pub", "r", encoding="utf-8") as public_key_file:
+            self.public_key = public_key_file.read()
+        with open(key_filename, "r", encoding="utf-8") as private_key_file:
+            self.private_key = private_key_file.read()
         self.kdm = kdm
-        self.commissions = []
-        self.deadline_timers = {}
         self.node = None
 
     async def send_deadline_reached(self, commission: Artwork) -> None:
@@ -67,12 +78,11 @@ class Peer:
         """
 
         deadline_seconds = commission.get_remaining_time()
-        deadline_timer = asyncio.get_event_loop().call_later(
+        asyncio.get_event_loop().call_later(
             deadline_seconds,
             asyncio.create_task,
             self.send_deadline_reached(commission),
         )
-        self.deadline_timers[commission.get_key()] = deadline_timer
 
     async def send_commission_request(self, commission: Artwork) -> None:
         """
@@ -85,7 +95,6 @@ class Peer:
             )
             if set_success:
                 self.logger.info("Commission sent")
-                self.commissions.append(commission)
             else:
                 self.logger.error("Commission failed to send")
             await self.setup_deadline_timer(commission)
@@ -102,9 +111,14 @@ class Peer:
                 width = float(input("Enter commission width: "))
                 height = float(input("Enter commission height: "))
                 wait_time = float(input("Enter wait time in seconds: "))
-                commission = Artwork(width, height, timedelta(seconds=wait_time))
+                commission = Artwork(
+                    width,
+                    height,
+                    timedelta(seconds=wait_time),
+                    originator_public_key=self.public_key,
+                )
                 await self.send_commission_request(commission)
-                break
+                return commission
             except ValueError:
                 self.logger.error("Invalid input. Please enter a valid float.")
 
@@ -150,7 +164,10 @@ class Peer:
         Connect to the kademlia network.
         """
 
-        self.node = self.kdm.network.NotifyingServer(self.data_stored_callback)
+        self.node = self.kdm.network.NotifyingServer(
+            self.data_stored_callback,
+            node_id=hashlib.sha1(self.public_key.encode()).digest(),
+        )
         await self.node.listen(self.port)
         if self.network_ip_address is not None:
             await self.node.bootstrap(
@@ -176,17 +193,22 @@ class Peer:
 
 
 async def main():
-    """Main function"""
+    """Main function
+
+    Run the file with the following:
+    python3 peer.py <port_num> <key_filename> <address>
+    """
 
     logging.basicConfig(
         format="%(asctime)s %(name)s %(levelname)s | %(message)s", level=logging.INFO
     )
     port_num = sys.argv[1]
-    if len(sys.argv) == 2:
+    key_filename = sys.argv[2]
+    if len(sys.argv) == 3:
         address = None
     else:
         address = sys.argv[2]
-    peer = Peer(port_num, address, kademlia)
+    peer = Peer(port_num, key_filename, address, kademlia)
     await peer.connect_to_network()
     await peer.commission_art_piece()
 

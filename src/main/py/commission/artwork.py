@@ -26,10 +26,12 @@ class Artwork:
 
     def __init__(
         self,
-        width: int,
-        height: int,
+        width: float,
+        height: float,
         wait_time: timedelta,
         constraint: Constraint = None,
+        originator_public_key: str = "",
+
     ):
         """
         Initializes an instance of the Artwork class.
@@ -46,6 +48,7 @@ class Artwork:
         self.key = self.generate_key()
         start_time = datetime.now()
         self.end_time = start_time + self.wait_time
+        self.originator_public_key = originator_public_key
 
     def generate_key(self):
         """
