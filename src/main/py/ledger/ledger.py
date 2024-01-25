@@ -6,8 +6,6 @@ The Ledger class allows us to add owners...
 
 from peer.peer import Peer
 
-# original if the first in the ledger is the originator's blah blah blah...
-
 
 class Ledger:
     """Class to manage a Ledger for a single Artwork."""
