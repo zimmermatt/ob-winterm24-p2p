@@ -4,6 +4,9 @@ Module to manage art collections for Art Collectors.
 
 from enum import Enum
 
+# TODO: Deal with ledgers
+#      Handle what happens when a trade is accepted or rejected
+
 
 class TradeStatus(Enum):
     """
@@ -24,6 +27,13 @@ class ArtCollection:
     def __init__(self) -> None:
         self.trade_status = {}
         self.artworks = []
+
+    def get_artworks(self):
+        """
+        Returns the artworks in the collection.
+        """
+
+        return self.artworks
 
     def add_artwork(self, artwork):
         """
@@ -53,6 +63,10 @@ class ArtCollection:
         """
 
         return self.trade_status[peer]
+
+    # def trade_accepted(self, peer):
+
+    # def trade_rejected(self, peer):
 
     def is_all_trade_complete(self):
         """

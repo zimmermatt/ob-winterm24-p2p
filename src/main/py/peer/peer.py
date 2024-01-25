@@ -12,7 +12,7 @@ import logging
 import sys
 import server as kademlia
 from commission.artwork import Artwork
-from commission.artcollection import ArtCollection, TradeStatus
+from commission.artcollection import TradeStatus, ArtCollection
 
 
 class Peer:
@@ -159,7 +159,65 @@ class Peer:
             )
         self.logger.info("Running server on port %d", self.port)
 
-    def swap_art(self, other_peer, my_art: Artwork, their_art: Artwork):
+    def send_trade_status(self, commission: ArtCollection, status: TradeStatus):
+        """
+        Send the trade status to the commission.
+        """
+
+        self.logger.info("Sending trade status: %s", status)
+        self.art_collection.set_trade_status(commission, status)
+
+    def recieve_trade_status(self, commission: ArtCollection):
+        """
+        Receive the trade status from the commission.
+        """
+
+        self.logger.info("Sending trade received notice")
+        self.art_collection.set_trade_status(commission, TradeStatus.RECEIVED)
+
+    def accepted_trade_handling(self, commission: ArtCollection):
+        """
+        Accept the trade.
+        """
+
+        self.logger.info("Handle trade acceptance")
+        commission.trade_accepted(self)
+
+    def rejected_trade_handling(self, commission: ArtCollection):
+        """
+        Reject the trade.
+        """
+
+        self.logger.info("Handle trade rejection")
+        commission.trade_rejected(self)
+
+    def complete_received_trade(self, commission: ArtCollection):
+        """
+        Update the trade status to completed.
+        """
+
+        self.logger.info("Sending trade complete notice")
+
+        if commission.get_trade_status() == TradeStatus.RECEIVED:
+            commission.set_trade_status(TradeStatus.COMPLETED)
+
+    def get_trade_status(self, commission: ArtCollection):
+        """
+        Get the trade status for the commission.
+        """
+
+        self.logger.info("Getting trade status")
+        return self.art_collection.get_trade_status(commission)
+
+    def set_trade_status(self, commission: ArtCollection, status: TradeStatus):
+        """
+        Set the trade status for the commission.
+        """
+
+        self.logger.info("Setting trade status")
+        self.art_collection.set_trade_status(commission, status)
+
+    def swap_art(self, other_peer, my_art: ArtCollection, their_art: ArtCollection):
         """
         Swap my_art from this peer's collection with their_art from other_peer's collection.
         """
@@ -172,7 +230,7 @@ class Peer:
         other_peer.remove_from_art_collection(their_art)
         self.add_to_art_collection(their_art)
 
-    def add_to_art_collection(self, commission: Artwork):
+    def add_to_art_collection(self, commission: ArtCollection):
         """
         Add the commission to the art collection.
         """
@@ -180,37 +238,13 @@ class Peer:
         self.logger.info("Adding commission to art collection")
         self.art_collection.add_artwork(commission)
 
-    def remove_from_art_collection(self, commission: Artwork):
+    def remove_from_art_collection(self, commission: ArtCollection):
         """
         Remove the commission from the art collection.
         """
 
         self.logger.info("Removing commission from art collection")
         self.art_collection.remove_artwork(commission)
-
-    def send_trade_complete(self, commission: Artwork):
-        """
-        Send a trade complete notice to the commission.
-        """
-
-        self.logger.info("Sending trade complete notice")
-        commission.set_trade_complete()
-
-    def reply_trade_status_received(self, commission: Artwork):
-        """
-        Reply with a trade received notice to the commission.
-        """
-
-        self.logger.info("Sending trade received notice")
-        self.art_collection.set_trade_status(commission, TradeStatus.RECEIVED)
-
-    def send_trade_status(self, commission: Artwork, status: TradeStatus):
-        """
-        Send a trade status to the commission.
-        """
-
-        self.logger.info("Sending trade status: %s", status)
-        self.art_collection.set_trade_status(commission, status)
 
 
 async def main():

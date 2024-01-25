@@ -15,7 +15,7 @@ port=$PSTART
 while [ ${COUNT} -lt ${NUM_PORTS} ]
 do
   #Check for Open ports, if open then OK, else continue
-  if ! netstat -apn | grep -q "$IP:$port" 
+  if ! netstat -apn | grep -q "$IP:$port"
   then
     echo "Starting on port $port"
     python3 -m sample_module.udp_server ${port} &
