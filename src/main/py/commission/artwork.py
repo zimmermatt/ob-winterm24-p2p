@@ -54,7 +54,7 @@ class Artwork:
         key_length = 10
         characters = string.ascii_letters + string.digits
         random_string = "".join(random.choice(characters) for _ in range(key_length))
-        sha1_hash = hashlib.sha1(random_string.encode()).hexdigest()
+        sha1_hash = hashlib.sha1(random_string.encode()).digest()
         return sha1_hash
 
     def get_remaining_time(self):
