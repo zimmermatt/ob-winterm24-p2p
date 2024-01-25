@@ -26,6 +26,7 @@ class ArtCollection:
         """
 
         self.artworks.append(artwork)
+        # add new owner to ledger
 
     def remove_from_art_collection(self, artwork: Artwork):
         """
@@ -33,3 +34,4 @@ class ArtCollection:
         """
 
         self.artworks.remove(artwork)
+        # garbage collect previous owner?
