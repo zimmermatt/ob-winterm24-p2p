@@ -59,7 +59,12 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.mock_kdm = MagicMock()
         self.mock_node = AsyncMock(spec=MockNode)
         self.mock_kdm.network.NotifyingServer.return_value = self.mock_node
-        self.peer = Peer(5001, "127.0.0.1:5000", self.mock_kdm)
+        self.peer = Peer(
+            5001,
+            "src/test/py/resources/peer_test",
+            "127.0.0.1:5000",
+            self.mock_kdm,
+        )
         self.deadline_task = None
 
     def test_initialization(self):
@@ -97,9 +102,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         ):
             self.test_logger.debug(mock_input)
             self.peer.node = self.mock_node
-            await self.peer.commission_art_piece()
-            self.assertEqual(len(self.peer.commissions), 1)
-            commission = self.peer.commissions[0]
+            commission = await self.peer.commission_art_piece()
             self.mock_node.set.assert_called_with(
                 commission.get_key(), pickle.dumps(commission)
             )
