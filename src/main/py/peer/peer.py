@@ -14,6 +14,8 @@ import server as kademlia
 from commission.artwork import Artwork
 from commission.artcollection import TradeStatus, ArtCollection
 
+# create the pending list
+
 
 class Peer:
     """Class to manage peer functionality"""
@@ -49,6 +51,8 @@ class Peer:
         """
         Mark the commission as complete, publish it on kademlia, and remove it from the list.
         """
+
+        # handle cases when commission can't be pickekd
 
         commission.set_complete()
         try:
@@ -167,7 +171,7 @@ class Peer:
         self.logger.info("Sending trade status: %s", status)
         self.art_collection.set_trade_status(commission, status)
 
-    def recieve_trade_status(self, commission: ArtCollection):
+    def receive_trade_status(self, commission: ArtCollection):
         """
         Receive the trade status from the commission.
         """
@@ -198,8 +202,7 @@ class Peer:
 
         self.logger.info("Sending trade complete notice")
 
-        if commission.get_trade_status() == TradeStatus.RECEIVED:
-            commission.set_trade_status(TradeStatus.COMPLETED)
+        commission.set_trade_status(TradeStatus.COMPLETED)
 
     def get_trade_status(self, commission: ArtCollection):
         """
@@ -221,6 +224,8 @@ class Peer:
         """
         Swap my_art from this peer's collection with their_art from other_peer's collection.
         """
+
+        # handle when art isn't in the collection
 
         self.logger.info("Swapping %s with %s's %s", my_art, other_peer, their_art)
 

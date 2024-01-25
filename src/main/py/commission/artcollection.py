@@ -62,9 +62,15 @@ class ArtCollection:
         Returns the trade status for the given peer.
         """
 
+        # handle when a peer isn't in the trade_status dictionary
+
         return self.trade_status[peer]
 
     # def trade_accepted(self, peer):
+    # remove from pending list
+    # add ownership to ledger (blockchain)
+    # swap artworks
+    # reply_trade_status_recieved
 
     # def trade_rejected(self, peer):
 
