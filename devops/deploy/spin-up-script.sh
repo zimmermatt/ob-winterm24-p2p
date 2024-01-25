@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Just a basic script to spin up listening servers on different ports in dynamic port range
 # Setting up variables
 PSTART=${1:-50000}
 PEND=${2:-50050}
-PEER_FILE="peer_list.txt"
+PEER_FILE="peer_list1.txt"
 IP=127.0.0.1
 COUNT=0
 ((NUM_PORTS=${PEND}-${PSTART}))
@@ -15,6 +15,15 @@ then
 	echo "Directory keys exists."
 else
 	mkdir keys/
+fi
+
+# Making Peer file if it does not exist
+if [ -f $PEER_FILE ]
+then
+	echo "Peer List File exists"
+else
+	touch $PEER_FILE
+	chmod 600 $PEER_FILE
 fi
 
 echo "Total number of ports: $NUM_PORTS"

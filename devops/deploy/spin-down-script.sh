@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-PORT_LIST="peer_list.txt"
+PEER_LIST="peer_list.txt"
 # Now fully implemented spinning down through the port_list.txt
 IP=127.0.0.1
 declare -a PORTS=()
