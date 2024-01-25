@@ -35,3 +35,7 @@ class Ledger:
         """Hash the transaction."""
         transaction_string = json.dumps(transaction.__dict__, sort_keys=True)
         return hashlib.sha1(transaction_string.encode()).digest()
+
+    # def check_original_artwork(self, transaction):
+    #     """Check if the artwork is an original."""
+    #     check pull request to see if

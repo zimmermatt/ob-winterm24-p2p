@@ -12,7 +12,7 @@ import logging
 import sys
 import server as kademlia
 from commission.artwork import Artwork
-from commission.artwork import TradeStatus
+from commission.artcollection import ArtCollection, TradeStatus
 
 
 class Peer:
@@ -43,7 +43,7 @@ class Peer:
         self.commissions = []
         self.deadline_timers = {}
         self.node = None
-        self.art_collection = []
+        self.art_collection = ArtCollection()
 
     async def send_deadline_reached(self, commission: Artwork) -> None:
         """
@@ -159,38 +159,6 @@ class Peer:
             )
         self.logger.info("Running server on port %d", self.port)
 
-    # def send_trade_rejection(self, commission: Artwork):
-    #     """
-    #     Send a trade rejection to the commission.
-    #     """
-
-    #     self.logger.info("Sending trade rejection")
-    #     commission.set_trade_status(TradeStatus.REJECTED)
-
-    # def send_trade_acceptance(self, commission: Artwork):
-    #     """
-    #     Send a trade acceptance to the commission.
-    #     """
-
-    #     self.logger.info("Sending trade acceptance")
-    #     commission.set_trade_status(TradeStatus.ACCEPTED)
-
-    def send_trade_status(self, commission: Artwork, status: TradeStatus):
-        """
-        Send a trade status to the commission.
-        """
-
-        self.logger.info("Sending trade status: %s", status)
-        commission.set_trade_status(status)
-
-    def reply_trade_received(self, commission: Artwork):
-        """
-        Reply with a trade received notice to the commission.
-        """
-
-        self.logger.info("Sending trade received notice")
-        commission.set_trade_status(TradeStatus.RECEIVED)
-
     def swap_art(self, other_peer, my_art: Artwork, their_art: Artwork):
         """
         Swap my_art from this peer's collection with their_art from other_peer's collection.
@@ -210,7 +178,7 @@ class Peer:
         """
 
         self.logger.info("Adding commission to art collection")
-        self.art_collection.append(commission)
+        self.art_collection.add_artwork(commission)
 
     def remove_from_art_collection(self, commission: Artwork):
         """
@@ -218,7 +186,7 @@ class Peer:
         """
 
         self.logger.info("Removing commission from art collection")
-        self.art_collection.remove(commission)
+        self.art_collection.remove_artwork(commission)
 
     def send_trade_complete(self, commission: Artwork):
         """
@@ -227,6 +195,22 @@ class Peer:
 
         self.logger.info("Sending trade complete notice")
         commission.set_trade_complete()
+
+    def reply_trade_status_received(self, commission: Artwork):
+        """
+        Reply with a trade received notice to the commission.
+        """
+
+        self.logger.info("Sending trade received notice")
+        self.art_collection.set_trade_status(commission, TradeStatus.RECEIVED)
+
+    def send_trade_status(self, commission: Artwork, status: TradeStatus):
+        """
+        Send a trade status to the commission.
+        """
+
+        self.logger.info("Sending trade status: %s", status)
+        self.art_collection.set_trade_status(commission, status)
 
 
 async def main():

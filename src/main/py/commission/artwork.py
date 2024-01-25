@@ -9,19 +9,7 @@ import string
 import random
 import hashlib
 from datetime import datetime, timedelta
-from enum import Enum
 from commission.constraint import Constraint
-
-
-class TradeStatus(Enum):
-    """
-    Enum to manage trade status
-    """
-
-    ACCEPTED = "accepted"
-    REJECTED = "rejected"
-    RECEIVED = "received"
-    COMPLETED = "completed"
 
 
 class Artwork:
@@ -52,7 +40,6 @@ class Artwork:
         self.key = self.generate_key()
         start_time = datetime.now()
         self.end_time = start_time + self.wait_time
-        self.trade_status = {}
 
     def generate_key(self):
         """
@@ -102,29 +89,3 @@ class Artwork:
 
         self.commission_complete = True
         return self
-
-    def set_trade_status(self, peer, status: TradeStatus):
-        """
-        Sets the trade status for the given peer.
-        """
-
-        self.trade_status[peer] = status.value
-        return self
-
-    def get_trade_status(self, peer):
-        """
-        Returns the trade status for the given peer.
-        """
-
-        return self.trade_status[peer]
-
-    def is_all_trade_complete(self):
-        """
-        Returns True if all trades, whether it be an acceptance or rejection, are complete,
-        False otherwise.
-        """
-
-        return all(
-            self.get_trade_status(peer) == TradeStatus.COMPLETED.value
-            for peer in self.trade_status
-        )
