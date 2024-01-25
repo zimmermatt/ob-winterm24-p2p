@@ -24,6 +24,8 @@ class Artwork:
     Class to manage artwork commissions
     """
 
+    # pylint: disable=too-many-arguments, too-many-instance-attributes
+
     def __init__(
         self,
         width: float,
@@ -31,7 +33,6 @@ class Artwork:
         wait_time: timedelta,
         constraint: Constraint = None,
         originator_public_key: str = "",
-
     ):
         """
         Initializes an instance of the Artwork class.

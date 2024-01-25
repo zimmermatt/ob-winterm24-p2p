@@ -23,8 +23,8 @@ class TestCoordinates(unittest.TestCase):
 
     def test_create_bounds(self):
         """Check if correct bounds are created"""
-        width = randrange(1, 11)
-        height = randrange(10, 41)
+        width = randrange(3, 11)
+        height = randrange(3, 41)
         bounds = self.coordinates.create_bounds(width, height)
         self.assertLessEqual(bounds[0] - 1, width)
         self.assertLessEqual(bounds[1] - 1, height)
