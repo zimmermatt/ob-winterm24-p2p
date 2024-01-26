@@ -51,7 +51,7 @@ def generate_subcanvas(width: int, height: int):
 
 
 def generate_pixels(
-    subcanvas: tuple[tuple[int, int], tuple[int, int]], constraint: Constraint
+    subcanvas: Subcanvas, constraint: Constraint
 ):
     """
     Generate a list of pixel info that adheres to coordiantes, dimensions, constraints

@@ -14,7 +14,7 @@ from drawing.coordinates import Coordinates
 from drawing.color import Color
 
 Pixel = namedtuple("Pixel", ["coordinates", "color"])
-Pixel.__annotations__ = {"coordiantes": Coordinates, "color": Color}
+Pixel.__annotations__ = {"coordinates": Coordinates, "color": Color}
 Constraint = namedtuple("Constraint", ["color", "line_type"])
 Constraint.__annotations__ = {"color": Color, "line_type": str}
 
