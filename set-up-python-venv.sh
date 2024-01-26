@@ -6,18 +6,16 @@ DEBUG=false
 # When sourcing a script, OPTIND can be set to a value past the length of the options,
 # this ensures it is set to the beginning.
 OPTIND=1
-while getopts 'fd' option; do
+while getopts ':fd' option; do
     case $option in
         f)
-            echo ">>> force"
             FORCE_RUN=true
             ;;
         d)
-            echo ">>> debug"
             DEBUG=true
             ;;
         \?)
-            echo "Invalid option"
+            echo "Invalid option. Only -f and -d are accepted."
             exit;;
     esac
 done
