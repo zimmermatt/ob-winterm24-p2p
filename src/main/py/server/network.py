@@ -21,7 +21,7 @@ class NotifyingServer(Server):
 
     """
 
-    def __init__(self, data_stored_callback, ksize=20, alpha=3):
+    def __init__(self, data_stored_callback, ksize=20, alpha=3, node_id=None):
         """
         Initializes a new instance of the NewServer class.
 
@@ -33,7 +33,8 @@ class NotifyingServer(Server):
         """
         self.data_stored_callback = data_stored_callback
         # Call the parent class's __init__ with the new protocol
-        super().__init__(ksize, alpha)
+
+        super().__init__(ksize, alpha, node_id=node_id)
 
     def _create_protocol(self):
         """

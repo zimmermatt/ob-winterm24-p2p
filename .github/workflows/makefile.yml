@@ -13,10 +13,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up python environment
-      run: source set-up-python-venv.sh ci-env
+      run: source set-up-python-venv.sh -d
 
     - name: Run linters and tests
       run: source venv/bin/activate && make test
