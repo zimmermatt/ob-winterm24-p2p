@@ -5,10 +5,6 @@ Module to manage artwork commission class
 Artwork class allows us to create a commission, generate a file descriptor
 """
 
-
-import string
-import random
-import hashlib
 from collections import namedtuple
 from datetime import datetime, timedelta
 from drawing.coordinates import Coordinates
