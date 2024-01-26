@@ -1,6 +1,14 @@
+#!/usr/bin/env python3
+
 # Importing
+import logging
 import asyncio
 import subprocess
+
+# Logging config
+logging.basicConfig(
+    filename='supervisor.log', filemode='w', format="%(asctime)s %(name)s %(levelname)s | %(message)s", level=logging.INFO
+)
 
 # Placeholder for function to recover nodes recover_node(host, port)
 def recover_node(node_number, host, port):
@@ -11,13 +19,15 @@ def recover_node(node_number, host, port):
 async def ping_node(node_number, host, port):
     try:
         reader, writer = await asyncio.open_connection(host, port)
-        print(f"Alive node at {host}:{port}")
-        writer.close()
-        await writer.wait_closed()
+        logging.info(f"Alive node at {host}:{port}")
     except (OSError, asyncio.TimeoutError):
-        print(f"Node at {host}:{port} is not responding")
+        logging.error(f"Node at {host}:{port} is not responding")
         # Recover the node using recover_node(host, port) function
         recover_node(node_number, host, port)
+    finally:
+        if writer:
+            writer.close()
+            await writer.wait_closed()
 
 # Main Function
 async def main():
