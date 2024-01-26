@@ -13,7 +13,6 @@ import logging
 import sys
 import server as kademlia
 from commission.artwork import Artwork
-from commission.artcollection import ArtCollection
 
 
 class Peer:
@@ -175,40 +174,47 @@ class Peer:
             )
         self.logger.info("Running server on port %d", self.port)
 
-    def swap_art(
-        self,
-        my_art_collection: ArtCollection,
-        their_art_collection: ArtCollection,
-        my_art: Artwork,
-        their_art: Artwork,
-    ):
+    def add_to_art_collection(self, artwork, collection):
         """
-        Swap my_art from this peer's collection with their_art from other_peer's collection.
+        Add artwork to collection
         """
 
-        self.logger.info("Swapping artworks between auctioner and winning bidder.")
+        try:
+            collection.add_to_art_collection(artwork)
+            logging.info("Artwork successfully added to collection.")
+        except ValueError as e:
+            logging.error("Failed to add artwork to collection: %s", e)
 
-        my_art_collection.remove_from_art_collection(my_art)
-        their_art_collection.add_to_art_collection(my_art)
-
-        their_art_collection.remove_from_art_collection(their_art)
-        my_art_collection.add_to_art_collection(their_art)
-
-    def add_to_art_collection(self, artwork: Artwork, collection: ArtCollection):
+    def remove_from_art_collection(self, artwork, collection):
         """
-        Add the commission to the art collection.
+        Remove artwork from collection
         """
 
-        self.logger.info("Adding commission to art collection")
-        collection.add_to_art_collection(artwork)
+        try:
+            collection.remove_from_art_collection(artwork)
+            logging.info("Artwork removed from collection successfully.")
+        except ValueError as e:
+            logging.error("Failed to remove artwork from collection: %s", e)
 
-    def remove_from_art_collection(self, artwork: Artwork, collection: ArtCollection):
+    def swap_art(self, my_art, their_art, my_art_collection, their_art_collection):
         """
-        Remove the commission from the art collection.
+        Swap artwork between two collections
         """
 
-        self.logger.info("Removing commission from art collection")
-        collection.remove_from_art_collection(artwork)
+        try:
+            if (
+                my_art in my_art_collection.get_artworks()
+                and their_art in their_art_collection.get_artworks()
+            ):
+                my_art_collection.remove_from_art_collection(my_art)
+                their_art_collection.remove_from_art_collection(their_art)
+                my_art_collection.add_to_art_collection(their_art)
+                their_art_collection.add_to_art_collection(my_art)
+                logging.info("Artwork successfully swapped.")
+            else:
+                logging.warning("Artwork not found in collections.")
+        except ValueError as e:
+            logging.error("Failed to swap artwork: %s", e)
 
 
 async def main():
