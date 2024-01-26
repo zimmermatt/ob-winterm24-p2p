@@ -13,7 +13,7 @@ clean-src:
 	find src/ -type d -name "__pycache__" -print0 | xargs -0 rm -rf
 
 pylint:
-	pylint --recursive=y src/*/py 
+	pylint --recursive=y src/*/py
 
 ruff:
 	ruff format
