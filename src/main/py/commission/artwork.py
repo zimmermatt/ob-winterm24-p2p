@@ -5,8 +5,20 @@ Module to manage artwork commission class
 Artwork class allows us to create a commission, generate a file descriptor
 """
 
+
+import string
+import random
+import hashlib
+from collections import namedtuple
 from datetime import datetime, timedelta
+from drawing.coordinates import Coordinates
+from drawing.color import Color
 import utils
+
+Pixel = namedtuple("Pixel", ["coordinates", "color"])
+Pixel.__annotations__ = {"coordiantes": Coordinates, "color": Color}
+Constraint = namedtuple("Constraint", ["color", "line_type"])
+Constraint.__annotations__ = {"color": Color, "line_type": str}
 
 
 class Artwork:
@@ -14,23 +26,28 @@ class Artwork:
     Class to manage artwork commissions
     """
 
+    # pylint: disable=too-many-arguments, too-many-instance-attributes
+
     def __init__(
         self,
         width: float,
         height: float,
         wait_time: timedelta,
+        constraint: Constraint = None,
         originator_public_key: str = "",
     ):
         """
         Initializes an instance of the Artwork class.
-        - width (float): The width of the artwork in pixels.
+        - width (int): The width of the artwork in pixels.
         - height (float): The height of the artwork in pixels.
         - wait_time (timedelta): The wait time for the artwork as a timedelta.
+        - constraint (Constraint): Constraint instance set to the artwork.
         """
         self.width = width
         self.height = height
         self.wait_time = wait_time
         self.commission_complete = False
+        self.constraint = constraint
         self.key = utils.generate_random_sha1_hash()
         start_time = datetime.now()
         self.end_time = start_time + self.wait_time

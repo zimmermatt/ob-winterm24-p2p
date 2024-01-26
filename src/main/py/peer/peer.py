@@ -11,11 +11,12 @@ import ipaddress
 import pickle
 import logging
 import sys
-from trade.offer_response import OfferResponse
-from trade.offer_announcement import OfferAnnouncement
+from PIL import Image
 import server as kademlia
 from commission.artwork import Artwork
 from peer.inventory import Inventory
+from trade.offer_response import OfferResponse
+from trade.offer_announcement import OfferAnnouncement
 import utils
 
 
@@ -292,6 +293,22 @@ class Peer:
                 [(str(self.network_ip_address), self.network_port_num)]
             )
         self.logger.info("Running server on port %d", self.port)
+
+    def merge_canvas(self, width: int, height: int, fragment) -> Image.Image:
+        """
+        Merge fragments received from a Contributor Artist Peer into a complete colored canvas
+        """
+        canvas = Image.new(mode="RGB", size=(width, height), color=(255, 255, 255))
+        pixels = canvas.load()
+
+        for pixel in fragment:
+            x = pixel[0][0]
+            y = pixel[0][1]
+            # Making them black for now
+            pixels[x, y] = fragment.get_fragment_color()
+
+        canvas.save("canvas.png", "PNG")
+        return canvas
 
 
 async def main():
