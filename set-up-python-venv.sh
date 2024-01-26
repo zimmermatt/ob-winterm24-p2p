@@ -45,10 +45,6 @@ if [ "${DEBUG}" = "true" ]; then
     echo is being sourced = \"${IS_BEING_SOURCED}\"
     echo '~~~~~~~~~~~~~'
     echo
-    cat $0
-    echo
-    echo '~~~~~~~~~~~~~'
-    echo
 fi
 
 if [ "${FORCE_RUN}" = "false" ] && [ "${IS_BEING_SOURCED}" = "false" ]; then
