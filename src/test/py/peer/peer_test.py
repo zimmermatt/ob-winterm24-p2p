@@ -9,8 +9,8 @@ import logging
 import pickle
 import unittest
 from unittest.mock import patch, MagicMock, AsyncMock
-from peer.peer import Peer
 from commission.artwork import Artwork
+from peer.peer import Peer
 
 
 class MockNode:
@@ -126,49 +126,47 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             await self.deadline_task
             self.assertEqual(self.mock_node.set.call_count, 2)
 
-    async def test_add_to_art_collection(self):
+    def test_add_to_art_collection(self):
         """
         Test case for the add_to_art_collection method of the Peer class.
         """
-        with patch("logging.info"), patch("logging.error"):
-            self.peer.add_to_art_collection(self.artwork, self.new_owner)
-            self.peer.art_collection.add_to_art_collection.assert_called_once_with(
-                self.artwork
-            )
-            self.artwork.ledger.add_owner.assert_called_once_with(self.new_owner)
 
-    async def test_remove_from_art_collection(self):
+        self.peer.add_to_art_collection(self.artwork, self.new_owner)
+        self.assertIn(self.artwork, self.peer.art_collection.get_artworks())
+        self.assertIn(self.new_owner, self.artwork.ledger.get_history())
+
+    def test_remove_from_art_collection(self):
         """
         Test case for the remove_from_art_collection method of the Peer class.
         """
-        with patch("logging.info"), patch("logging.error"):
-            self.peer.remove_from_art_collection(self.artwork)
-            self.peer.art_collection.remove_from_art_collection.assert_called_once_with(
-                self.artwork
-            )
+
+        self.peer.art_collection.get_artworks.return_value = [self.artwork]
+        self.peer.remove_from_art_collection(self.artwork)
+        self.assertNotIn(self.artwork, self.peer.art_collection.get_artworks())
 
     async def test_swap_art(self):
         """
         Test case for the swap_art method of the Peer class.
         """
-        with patch("logging.info"), patch("logging.warning"), patch("logging.error"):
-            self.peer.art_collection.get_artworks.return_value = [self.my_art]
-            self.their_peer.art_collection.get_artworks.return_value = [self.their_art]
-            self.peer.swap_art(self.my_art, self.their_art, self.their_peer)
-            self.peer.art_collection.remove_from_art_collection.assert_called_with(
-                self.my_art
-            )
-            self.their_peer.art_collection.remove_from_art_collection.assert_called_with(
-                self.their_art
-            )
-            self.peer.art_collection.add_to_art_collection.assert_called_with(
-                self.their_art
-            )
-            self.their_peer.art_collection.add_to_art_collection.assert_called_with(
-                self.my_art
-            )
-            self.their_art.ledger.add_owner.assert_called_with(self.peer)
-            self.my_art.ledger.add_owner.assert_called_with(self.their_peer)
+
+        self.peer.art_collection.get_artworks.return_value = [self.my_art]
+        self.their_peer.art_collection.get_artworks.return_value = [self.their_art]
+        await self.peer.swap_art(self.my_art, self.their_art, self.their_peer)
+        self.peer.art_collection.remove_from_art_collection.assert_called_once_with(
+            self.my_art
+        )
+        self.their_peer.art_collection.remove_from_art_collection.assert_called_once_with(
+            self.their_art
+        )
+        self.peer.art_collection.add_to_art_collection.assert_called_once_with(
+            self.their_art
+        )
+        self.their_peer.art_collection.add_to_art_collection.assert_called_once_with(
+            self.my_art
+        )
+        self.their_art.ledger.add_owner.assert_called_once_with(self.peer)
+        self.my_art.ledger.add_owner.assert_called_once_with(self.their_peer)
+
 
 if __name__ == "__main__":
     # Create an event loop

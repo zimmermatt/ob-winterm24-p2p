@@ -15,26 +15,19 @@ class ArtCollection:
         Initialize the art collection by creating an empty list for the artworks
         in the collection
         """
-        
-        self.artworks = []
 
-    def get_artworks(self):
-        """
-        Returns the artworks in the collection
-        """
-
-        return self.artworks
+        self.artworks = set()
 
     def add_to_art_collection(self, artwork: Artwork):
         """
         Add an artwork to the collection
         """
 
-        self.artworks.append(artwork)
+        self.artworks.add(artwork)
 
     def remove_from_art_collection(self, artwork: Artwork):
         """
         Remove an artwork from the collection
         """
 
-        self.artworks.remove(artwork)
+        self.artworks.discard(artwork)
