@@ -16,7 +16,14 @@ class ArtCollection:
         in the collection
         """
 
-        self.artworks = set()
+        self._artworks = set()
+
+    @property
+    def artworks(self):
+        """
+        Return the artworks in the collection
+        """
+        return self._artworks
 
     def add_to_art_collection(self, artwork: Artwork):
         """
