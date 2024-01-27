@@ -25,7 +25,7 @@ class TestArtwork(unittest.TestCase):
 
     def test_generate_key(self):
         """Test the generate_file_descriptor method of Artwork"""
-        descriptor = self.artwork.generate_key()
+        descriptor = self.artwork.key
         # Assuming the descriptor should be a string
         self.assertIsInstance(descriptor, bytes)
 

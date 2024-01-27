@@ -37,6 +37,8 @@ class TestNewServer(unittest.IsolatedAsyncioTestCase):
 
         await self.node1.set("key", "value")
         self.mock_store_callback.assert_called_with(key_hash, "value")
+
+        await self.node2.set("key", "value1")
         self.node1.stop()
         self.node2.stop()
 
