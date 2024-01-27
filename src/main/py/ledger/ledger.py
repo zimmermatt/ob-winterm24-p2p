@@ -5,7 +5,6 @@ The Ledger class allows us to maintain a history of ownership for an Artwork.
 """
 
 import hashlib
-from peer.peer import Peer
 
 
 class Ledger:
@@ -15,13 +14,14 @@ class Ledger:
         self.stack = []
         self.top_of_stack = None
 
-    def add_owner(self, peer: Peer):
+    def add_owner(self, peer):
         """
         Add a new owner to the ledger.
         """
+
         try:
-            if not isinstance(peer, Peer):
-                raise ValueError("The owner must be an instance of Peer.")
+            if not hasattr(peer, "keys"):
+                raise ValueError("The owner must have a 'keys' attribute.")
 
             if self.top_of_stack is not None:
                 previous_hash = self.top_of_stack.digest()
@@ -39,6 +39,7 @@ class Ledger:
         """
         Get the current owner of the artwork.
         """
+
         try:
             if not self.stack:
                 raise ValueError("The ledger is empty.")
@@ -52,6 +53,7 @@ class Ledger:
         """
         Get the current version of the ledger.
         """
+
         try:
             if not self.stack:
                 raise ValueError("The ledger is empty.")
@@ -87,6 +89,7 @@ class Ledger:
         """
         Get the history of the ledger.
         """
+
         return self.stack
 
     def verify_integrity(self):

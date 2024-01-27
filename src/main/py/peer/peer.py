@@ -120,6 +120,7 @@ class Peer:
                     width,
                     height,
                     timedelta(seconds=wait_time),
+                    self.ledger,
                     originator_public_key=self.public_key,
                 )
                 await self.send_commission_request(commission)

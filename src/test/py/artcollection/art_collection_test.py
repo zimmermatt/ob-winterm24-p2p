@@ -1,9 +1,8 @@
 """Test module for ArtCollection class"""
 
 import unittest
-from datetime import timedelta
+from unittest.mock import Mock, MagicMock
 from commission.artcollection import ArtCollection
-from commission.artwork import Artwork
 
 
 class TestArtCollection(unittest.TestCase):
@@ -18,8 +17,11 @@ class TestArtCollection(unittest.TestCase):
         """
 
         self.collection = ArtCollection()
-        self.artwork1 = Artwork(100.0, 100.0, timedelta(days=1))
-        self.artwork2 = Artwork(200.0, 200.0, timedelta(days=2))
+        self.mock_ledger = Mock()
+        self.artwork1 = MagicMock()
+        self.artwork1.ledger = self.mock_ledger
+        self.artwork2 = MagicMock()
+        self.artwork2.ledger = self.mock_ledger
 
     def test_add_to_art_collection(self):
         """
@@ -42,4 +44,5 @@ class TestArtCollection(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    unittest.main()
     unittest.main()

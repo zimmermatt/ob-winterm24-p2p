@@ -15,6 +15,7 @@ class ArtCollection:
         Initialize the art collection by creating an empty list for the artworks
         in the collection
         """
+
         self.artworks = []
 
     def get_artworks(self):

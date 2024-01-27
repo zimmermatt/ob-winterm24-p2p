@@ -70,10 +70,15 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         )
         self.deadline_task = None
         self.artwork = MagicMock(spec=Artwork)
+        self.artwork.ledger = MagicMock()  # Add this line
         self.new_owner = MagicMock()
         self.their_peer = MagicMock(spec=Peer)
         self.my_art = MagicMock(spec=Artwork)
         self.their_art = MagicMock(spec=Artwork)
+        self.my_art.ledger = MagicMock()
+        self.their_art.ledger = MagicMock()
+        self.peer.art_collection = MagicMock()
+        self.their_peer.art_collection = MagicMock()
 
     def test_initialization(self):
         """
@@ -127,7 +132,6 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         """
         with patch("logging.info"), patch("logging.error"):
             self.peer.add_to_art_collection(self.artwork, self.new_owner)
-            # pylint: disable=no-member
             self.peer.art_collection.add_to_art_collection.assert_called_once_with(
                 self.artwork
             )
@@ -139,7 +143,6 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         """
         with patch("logging.info"), patch("logging.error"):
             self.peer.remove_from_art_collection(self.artwork)
-            # pylint: disable=no-member
             self.peer.art_collection.remove_from_art_collection.assert_called_once_with(
                 self.artwork
             )
@@ -152,14 +155,12 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             self.peer.art_collection.get_artworks.return_value = [self.my_art]
             self.their_peer.art_collection.get_artworks.return_value = [self.their_art]
             self.peer.swap_art(self.my_art, self.their_art, self.their_peer)
-            # pylint: disable=no-member
             self.peer.art_collection.remove_from_art_collection.assert_called_with(
                 self.my_art
             )
             self.their_peer.art_collection.remove_from_art_collection.assert_called_with(
                 self.their_art
             )
-            # pylint: disable=no-member
             self.peer.art_collection.add_to_art_collection.assert_called_with(
                 self.their_art
             )
