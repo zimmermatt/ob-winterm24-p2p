@@ -30,4 +30,3 @@ test: ruff pylint
 		  --top-level-directory .
 	coverage report
 	coverage html
-

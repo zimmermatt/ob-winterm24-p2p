@@ -309,6 +309,47 @@ class Peer:
 
         canvas.save("canvas.png", "PNG")
         return canvas
+    def add_to_art_collection(self, artwork, collection):
+        """
+        Add artwork to collection
+        """
+
+        try:
+            collection.add_to_art_collection(artwork)
+            logging.info("Artwork successfully added to collection.")
+        except ValueError as e:
+            logging.error("Failed to add artwork to collection: %s", e)
+
+    def remove_from_art_collection(self, artwork, collection):
+        """
+        Remove artwork from collection
+        """
+
+        try:
+            collection.remove_from_art_collection(artwork)
+            logging.info("Artwork removed from collection successfully.")
+        except ValueError as e:
+            logging.error("Failed to remove artwork from collection: %s", e)
+
+    def swap_art(self, my_art, their_art, my_art_collection, their_art_collection):
+        """
+        Swap artwork between two collections
+        """
+
+        try:
+            if (
+                my_art in my_art_collection.get_artworks()
+                and their_art in their_art_collection.get_artworks()
+            ):
+                my_art_collection.remove_from_art_collection(my_art)
+                their_art_collection.remove_from_art_collection(their_art)
+                my_art_collection.add_to_art_collection(their_art)
+                their_art_collection.add_to_art_collection(my_art)
+                logging.info("Artwork successfully swapped.")
+            else:
+                logging.warning("Artwork not found in collections.")
+        except ValueError as e:
+            logging.error("Failed to swap artwork: %s", e)
 
 
 async def main():

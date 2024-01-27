@@ -18,4 +18,3 @@ skip_empty = true
 [tool.pylint]
 # I prefer to allow an empty line at the end of a source file.
 disable = ["trailing-newlines"]
-
