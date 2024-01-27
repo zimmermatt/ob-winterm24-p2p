@@ -12,6 +12,7 @@ from collections import namedtuple
 from datetime import datetime, timedelta
 from drawing.coordinates import Coordinates
 from drawing.color import Color
+from ledger.ledger import Ledger
 
 Pixel = namedtuple("Pixel", ["coordinates", "color"])
 Pixel.__annotations__ = {"coordiantes": Coordinates, "color": Color}
@@ -49,6 +50,7 @@ class Artwork:
         start_time = datetime.now()
         self.end_time = start_time + self.wait_time
         self.originator_public_key = originator_public_key
+        self.ledger = Ledger()
 
     def generate_key(self):
         """

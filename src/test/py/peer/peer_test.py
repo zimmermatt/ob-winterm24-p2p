@@ -10,7 +10,6 @@ import pickle
 import unittest
 from unittest.mock import patch, MagicMock, AsyncMock
 from peer.peer import Peer
-from commission.artcollection import ArtCollection
 from commission.artwork import Artwork
 
 
@@ -70,10 +69,11 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             self.mock_kdm,
         )
         self.deadline_task = None
-        self.collection1 = ArtCollection()
-        self.collection2 = ArtCollection()
-        self.artwork1 = Artwork(100.0, 100.0, timedelta(days=1))
-        self.artwork2 = Artwork(200.0, 200.0, timedelta(days=2))
+        self.artwork = MagicMock(spec=Artwork)
+        self.new_owner = MagicMock()
+        self.their_peer = MagicMock(spec=Peer)
+        self.my_art = MagicMock(spec=Artwork)
+        self.their_art = MagicMock(spec=Artwork)
 
     def test_initialization(self):
         """
@@ -121,36 +121,53 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             await self.deadline_task
             self.assertEqual(self.mock_node.set.call_count, 2)
 
-    def test_add_to_art_collection(self):
+    async def test_add_to_art_collection(self):
         """
         Test case for the add_to_art_collection method of the Peer class.
-        This test verifies that the add_to_art_collection method correctly
-        adds an artwork to a collection.
         """
-        self.peer.add_to_art_collection(self.artwork1, self.collection1)
-        self.assertIn(self.artwork1, self.collection1.get_artworks())
+        with patch("logging.info"), patch("logging.error"):
+            self.peer.add_to_art_collection(self.artwork, self.new_owner)
+            # pylint: disable=no-member
+            self.peer.art_collection.add_to_art_collection.assert_called_once_with(
+                self.artwork
+            )
+            self.artwork.ledger.add_owner.assert_called_once_with(self.new_owner)
 
-    def test_remove_from_art_collection(self):
+    async def test_remove_from_art_collection(self):
         """
         Test case for the remove_from_art_collection method of the Peer class.
-        This test verifies that the remove_from_art_collection method correctly
         """
-        self.collection1.add_to_art_collection(self.artwork1)
-        self.peer.remove_from_art_collection(self.artwork1, self.collection1)
-        self.assertNotIn(self.artwork1, self.collection1.get_artworks())
+        with patch("logging.info"), patch("logging.error"):
+            self.peer.remove_from_art_collection(self.artwork)
+            # pylint: disable=no-member
+            self.peer.art_collection.remove_from_art_collection.assert_called_once_with(
+                self.artwork
+            )
 
-    def test_swap_art(self):
+    async def test_swap_art(self):
         """
         Test case for the swap_art method of the Peer class.
-        This test verifies that the swap_art method correctly swaps artworks
         """
-        self.collection1.add_to_art_collection(self.artwork1)
-        self.collection2.add_to_art_collection(self.artwork2)
-        self.peer.swap_art(
-            self.artwork1, self.artwork2, self.collection1, self.collection2
-        )
-        self.assertIn(self.artwork1, self.collection2.get_artworks())
-        self.assertIn(self.artwork2, self.collection1.get_artworks())
+        with patch("logging.info"), patch("logging.warning"), patch("logging.error"):
+            self.peer.art_collection.get_artworks.return_value = [self.my_art]
+            self.their_peer.art_collection.get_artworks.return_value = [self.their_art]
+            self.peer.swap_art(self.my_art, self.their_art, self.their_peer)
+            # pylint: disable=no-member
+            self.peer.art_collection.remove_from_art_collection.assert_called_with(
+                self.my_art
+            )
+            self.their_peer.art_collection.remove_from_art_collection.assert_called_with(
+                self.their_art
+            )
+            # pylint: disable=no-member
+            self.peer.art_collection.add_to_art_collection.assert_called_with(
+                self.their_art
+            )
+            self.their_peer.art_collection.add_to_art_collection.assert_called_with(
+                self.my_art
+            )
+            self.their_art.ledger.add_owner.assert_called_with(self.peer)
+            self.my_art.ledger.add_owner.assert_called_with(self.their_peer)
 
 
 if __name__ == "__main__":
