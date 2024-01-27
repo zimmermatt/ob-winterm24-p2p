@@ -315,6 +315,7 @@ class Peer:
 
         canvas.save("canvas.png", "PNG")
         return canvas
+
     def add_to_art_collection(self, artwork, collection):
         """
         Add artwork to collection
@@ -356,46 +357,6 @@ class Peer:
                 logging.warning("Artwork not found in collections.")
         except ValueError as e:
             logging.error("Failed to swap artwork: %s", e)
-
-    def add_to_art_collection(self, artwork, new_owner):
-        """
-        Add artwork to the collection and add new_owner to the ledger
-        """
-
-        self.art_collection.add_to_art_collection(artwork)
-        artwork.ledger.add_owner(new_owner)
-        logging.info(
-            "Artwork added to collection and new owner added to ledger successfully."
-        )
-
-    def remove_from_art_collection(self, artwork):
-        """
-        Remove artwork from collection
-        """
-
-        if artwork in self.art_collection:
-            self.art_collection.remove_from_art_collection(artwork)
-        else:
-            logging.warning("Artwork not found in collection.")
-
-    def swap_art(self, my_art, their_art, their_peer):
-        """
-        Swap artwork between two collections and update the owners in the ledger
-        """
-
-        if (
-            my_art in self.art_collection.get_artworks()
-            and their_art in their_peer.art_collection.get_artworks()
-        ):
-            self.art_collection.remove_from_art_collection(my_art)
-            their_peer.art_collection.remove_from_art_collection(their_art)
-            self.art_collection.add_to_art_collection(their_art)
-            their_peer.art_collection.add_to_art_collection(my_art)
-            their_art.ledger.add_owner(self)
-            my_art.ledger.add_owner(their_peer)
-            logging.info("Artwork successfully swapped and owners updated in ledger.")
-        else:
-            logging.warning("Artwork not found in collections.")
 
 
 async def main():

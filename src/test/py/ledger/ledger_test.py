@@ -5,6 +5,7 @@ import unittest
 from unittest.mock import MagicMock
 from ledger.ledger import Ledger
 
+
 class TestLedger(unittest.TestCase):
     """
     Test class for Ledger class
@@ -38,6 +39,7 @@ class TestLedger(unittest.TestCase):
 
         self.ledger.stack[0] = (self.mock_peer1, b"corrupted_hash")
         self.assertFalse(self.ledger.verify_integrity())
+
 
 if __name__ == "__main__":
     unittest.main()

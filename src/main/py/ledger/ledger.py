@@ -4,16 +4,11 @@ Module to manage a ledger for an Artwork.
 The Ledger class allows us to maintain a history of ownership for an Artwork.
 """
 
-"""
-Module to manage a ledger for an Artwork.
-
-The Ledger class allows us to maintain a history of ownership for an Artwork.
-"""
-
 import hashlib
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 class Ledger:
     """Class to manage a Ledger for a single Artwork."""
