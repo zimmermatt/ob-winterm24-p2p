@@ -170,7 +170,6 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             self.their_art.ledger.add_owner.assert_called_with(self.peer)
             self.my_art.ledger.add_owner.assert_called_with(self.their_peer)
 
-
 if __name__ == "__main__":
     # Create an event loop
     loop = asyncio.get_event_loop()

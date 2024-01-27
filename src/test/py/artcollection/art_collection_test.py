@@ -2,7 +2,9 @@
 
 import unittest
 from unittest.mock import Mock, MagicMock
+from datetime import timedelta
 from commission.artcollection import ArtCollection
+from commission.artwork import Artwork
 
 
 class TestArtCollection(unittest.TestCase):
@@ -44,5 +46,4 @@ class TestArtCollection(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
     unittest.main()
