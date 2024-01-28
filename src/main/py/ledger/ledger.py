@@ -41,9 +41,12 @@ class Ledger:
         Verify the integrity of the ledger.
         """
 
-        if not self.stack:
-            logger.error("The ledger is empty.")
-            return False
+        if len(self.stack) == 1:
+            if (
+                self.stack[0][1]
+                != hashlib.sha256(self.stack[0][0].keys["public"].encode()).digest()
+            ):
+                return False
 
         for i in range(1, len(self.stack)):
             previous_hash = self.stack[i - 1][1]
