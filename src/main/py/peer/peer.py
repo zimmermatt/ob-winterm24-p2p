@@ -238,6 +238,13 @@ class Peer:
             )
             if set_success:
                 self.logger.info("Fragment sent")
+                self.inventory.remove_owned_artwork(self.inventory.pending_trades[response.trade_id].get_artwork_key())
+                # ledger update here for our owned artwork
+                # update the artwork in the dht with a set
+                artwork_received = self.node.get(response.offer_id)
+                self.inventory.add_owned_artwork(artwork_received)
+                # ledger update here for other artwork
+                # update the artwork in the dht with a set
             else:
                 self.logger.error("Fragment failed to send")
         except TypeError:
@@ -311,8 +318,15 @@ class Peer:
             await self.handle_trade_response(key, message_object)
         elif isinstance(message_object, TradeConfirmation):
             self.logger.info("Received trade confirmation")
-            if message_object.accepted:
+            if (
+                message_object.accepted
+                and message_object.trade_id in self.inventory.pending_trades
+            ):
                 self.logger.info("exchange ownership")
+                self.inventory.remove_pending_trade(message_object.trade_id)
+                self.inventory.completed_trades.add(message_object.trade_id)
+                self.inventory.add_owned_artwork(message_object.announced_offer_id)
+                self.inventory.remove_owned_artwork(message_object.responded_offer_id)
             else:
                 self.logger.info("trade failed")
         else:
@@ -349,6 +363,7 @@ class Peer:
 
         canvas.save("canvas.png", "PNG")
         return canvas
+
     def add_to_art_collection(self, artwork, collection):
         """
         Add artwork to collection
