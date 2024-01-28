@@ -17,6 +17,7 @@ from commission.artwork import Artwork
 from peer.inventory import Inventory
 from trade.offer_response import OfferResponse
 from trade.offer_announcement import OfferAnnouncement
+from trade.trade_confirmation import TradeConfirmation
 import utils
 
 
@@ -136,11 +137,14 @@ class Peer:
         self.logger.info("Generating fragment")
         return commission
 
-    async def handle_announcement_deadline(self, announcement_key, offer_announcement):
+    async def handle_announcement_deadline(
+        self, announcement_key, offer_announcement: OfferAnnouncement
+    ):
         """Handle the deadline for an announcement"""
 
         self.inventory.remove_pending_trade(announcement_key)
         self.inventory.completed_trades.add(announcement_key)
+        offer_announcement.deadline_reached = True
         try:
             set_success = await self.node.set(
                 announcement_key, pickle.dumps(offer_announcement)
@@ -182,7 +186,7 @@ class Peer:
             self.logger.error("Trade type is not pickleable")
 
     async def send_trade_response(
-        self, trade_key: bytes, announcement: OfferAnnouncement
+        self, trade_id: bytes, announcement: OfferAnnouncement
     ):
         """
         Send a trade response to the network.
@@ -190,8 +194,8 @@ class Peer:
 
         if announcement.originator_public_key == self.keys["public"]:
             return
-        if trade_key in self.inventory.pending_trades and announcement.deadline_reached:
-            self.inventory.remove_pending_trade(trade_key)
+        if trade_id in self.inventory.pending_trades and announcement.deadline_reached:
+            self.inventory.remove_pending_trade(trade_id)
             return
         self.logger.info(
             "Sending trade response to %s", announcement.originator_public_key
@@ -201,11 +205,11 @@ class Peer:
             self.logger.info("No trade response to send")
             return
         offer_response = OfferResponse(
-            trade_key, artwork_to_trade.key, self.keys["public"]
+            trade_id, artwork_to_trade.key, self.keys["public"]
         )
         response_key = utils.generate_random_sha1_hash()
         self.inventory.add_pending_trade(
-            trade_key,
+            trade_id,
             offer_response,
         )
         try:
@@ -222,21 +226,51 @@ class Peer:
     async def handle_accept_trade(self, response: OfferResponse):
         """Handle an accepted trade"""
 
-        self.logger.info(response)
+        trade_confirmation = TradeConfirmation(
+            response.trade_id,
+            self.inventory.pending_trades[response.trade_id].get_artwork_key(),
+            self.keys["public"],
+            True,
+        )
+        try:
+            set_success = await self.node.set(
+                utils.generate_random_sha1_hash(), pickle.dumps(trade_confirmation)
+            )
+            if set_success:
+                self.logger.info("Fragment sent")
+            else:
+                self.logger.error("Fragment failed to send")
+        except TypeError:
+            self.logger.error("Fragment type is not pickleable")
 
     async def handle_reject_trade(self, response: OfferResponse):
         """Handle a rejected trade"""
 
-        self.logger.info(response)
+        trade_confirmation = TradeConfirmation(
+            response.trade_id,
+            self.inventory.pending_trades[response.trade_id].get_artwork_key(),
+            self.keys["public"],
+            False,
+        )
+        try:
+            set_success = await self.node.set(
+                utils.generate_random_sha1_hash(), pickle.dumps(trade_confirmation)
+            )
+            if set_success:
+                self.logger.info("Fragment sent")
+            else:
+                self.logger.error("Fragment failed to send")
+        except TypeError:
+            self.logger.error("Fragment type is not pickleable")
 
-    async def handle_trade_response(self, trade_key: bytes, response: OfferResponse):
+    async def handle_trade_response(self, trade_id: bytes, response: OfferResponse):
         """
         Handle a trade response from the network.
         """
 
         self.logger.info("Handling trade response")
-        if trade_key in self.inventory.pending_trades:
-            self.inventory.remove_pending_trade(trade_key)
+        if trade_id in self.inventory.pending_trades:
+            self.inventory.remove_pending_trade(trade_id)
             if response.trade_id in self.inventory.pending_trades:
                 self.inventory.remove_pending_trade(response.trade_id)
             self.handle_accept_trade(response)
@@ -275,6 +309,12 @@ class Peer:
         elif isinstance(message_object, OfferResponse):
             self.logger.info("Received trade response")
             await self.handle_trade_response(key, message_object)
+        elif isinstance(message_object, TradeConfirmation):
+            self.logger.info("Received trade confirmation")
+            if message_object.accepted:
+                self.logger.info("exchange ownership")
+            else:
+                self.logger.info("trade failed")
         else:
             self.logger.error("Invalid object received")
 
