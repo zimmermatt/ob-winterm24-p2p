@@ -33,6 +33,7 @@ class NotifyingServer(Server):
         """
         self.data_stored_callback = data_stored_callback
         # Call the parent class's __init__ with the new protocol
+
         super().__init__(ksize, alpha, node_id=node_id)
 
     def _create_protocol(self):

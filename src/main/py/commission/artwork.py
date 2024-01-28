@@ -5,13 +5,11 @@ Module to manage artwork commission class
 Artwork class allows us to create a commission, generate a file descriptor
 """
 
-import string
-import random
-import hashlib
 from collections import namedtuple
 from datetime import datetime, timedelta
 from drawing.coordinates import Coordinates
 from drawing.color import Color
+import utils
 
 Pixel = namedtuple("Pixel", ["coordinates", "color"])
 Pixel.__annotations__ = {"coordiantes": Coordinates, "color": Color}
@@ -25,7 +23,6 @@ class Artwork:
     """
 
     # pylint: disable=too-many-arguments, too-many-instance-attributes
-
     def __init__(
         self,
         width: float,
@@ -46,20 +43,10 @@ class Artwork:
         self.wait_time = wait_time
         self.commission_complete = False
         self.constraint = constraint
-        self.key = self.generate_key()
+        self.key = utils.generate_random_sha1_hash()
         start_time = datetime.now()
         self.end_time = start_time + self.wait_time
         self.originator_public_key = originator_public_key
-
-    def generate_key(self):
-        """
-        Generates a random SHA-1 hash as a file descriptor for the artwork.
-        """
-        key_length = 10
-        characters = string.ascii_letters + string.digits
-        random_string = "".join(random.choice(characters) for _ in range(key_length))
-        sha1_hash = hashlib.sha1(random_string.encode()).digest()
-        return sha1_hash
 
     def get_remaining_time(self):
         """
