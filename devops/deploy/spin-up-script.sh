@@ -35,7 +35,7 @@ port=$PSTART
 while [ ${COUNT} -le ${NUM_PORTS} ]
 do
   #Check for Open ports, if open then OK, else continue
-  if ! netstat -apn | grep -q "$IP:$port" 
+  if ! netstat -apn | grep -q "$IP:$port"
   then
     # Generating keys
     ssh-keygen -t ed25519 -f "keys/node${COUNT}" -N ""

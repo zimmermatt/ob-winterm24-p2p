@@ -23,7 +23,6 @@ class Artwork:
     """
 
     # pylint: disable=too-many-arguments, too-many-instance-attributes
-
     def __init__(
         self,
         width: float,
