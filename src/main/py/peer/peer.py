@@ -60,8 +60,8 @@ class Peer:
             self.keys["private"] = private_key_file.read()
         self.kdm = kdm
         self.node = None
-        self.ledger = Ledger()
         self.inventory = Inventory()
+        self.ledger = Ledger()
 
     async def send_deadline_reached(self, commission: Artwork) -> None:
         """
@@ -313,6 +313,17 @@ class Peer:
 
         canvas.save("canvas.png", "PNG")
         return canvas
+
+    async def create_new_ledger(self) -> Ledger:
+        """
+        Create a new ledger for the artwork
+        """
+
+        add = await self.ledger.add_owner(self)
+        if not add:
+            self.logger.error("Failed to add owner to ledger")
+            return
+        return add
 
 
 async def main():
