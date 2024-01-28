@@ -123,33 +123,6 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             await self.deadline_task
             self.assertEqual(self.mock_node.set.call_count, 2)
 
-    def test_add_to_art_collection(self):
-        """
-        Test case for the add_to_art_collection method of the Peer class.
-        This test verifies that the add_to_art_collection method correctly adds an artwork
-        """
-
-        self.peer.add_to_art_collection(self.artwork1, self.peer2)
-        self.assertIn(self.artwork1, self.peer2.art_collection.artworks)
-        self.assertIn(self.peer2, self.artwork1.ledger)
-
-    def test_remove_from_art_collection(self):
-        """Test case for the remove_from_art_collection method of the Peer class."""
-
-        self.peer.remove_from_art_collection(self.artwork1)
-        self.assertNotIn(self.artwork1, self.peer.art_collection.artworks)
-
-    def test_swap_art(self):
-        """Test case for the swap_art method of the Peer class."""
-
-        self.peer.art_collection.add_to_art_collection(self.artwork1)
-        self.peer2.art_collection.add_to_art_collection(self.artwork2)
-        self.peer.swap_art(self.artwork1, self.artwork2, self.peer2)
-        self.assertNotIn(self.artwork1, self.peer.art_collection.artworks)
-        self.assertIn(self.artwork2, self.peer.art_collection.artworks)
-        self.assertNotIn(self.artwork2, self.peer2.art_collection.artworks)
-        self.assertIn(self.artwork1, self.peer2.art_collection.artworks)
-
 
 if __name__ == "__main__":
     # Create an event loop

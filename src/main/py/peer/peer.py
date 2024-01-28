@@ -14,7 +14,6 @@ import sys
 from PIL import Image
 import server as kademlia
 from commission.artwork import Artwork
-from commission.artcollection import ArtCollection
 from ledger.ledger import Ledger
 from peer.inventory import Inventory
 from trade.offer_response import OfferResponse
@@ -62,7 +61,6 @@ class Peer:
         self.kdm = kdm
         self.node = None
         self.ledger = Ledger()
-        self.art_collection = ArtCollection()
         self.inventory = Inventory()
 
     async def send_deadline_reached(self, commission: Artwork) -> None:
@@ -315,40 +313,6 @@ class Peer:
 
         canvas.save("canvas.png", "PNG")
         return canvas
-
-    def add_to_art_collection(self, artwork, new_owner):
-        """
-        Add artwork to collection and add new owner to ledger
-        """
-
-        self.art_collection.add_to_art_collection(artwork)
-        artwork.ledger.add_owner(new_owner)
-        logging.info(
-            "Artwork added to collection and new owner added to ledger successfully."
-        )
-
-    def remove_from_art_collection(self, artwork):
-        """
-        Remove artwork from collection
-        """
-        if artwork in self.art_collection.artworks:
-            self.art_collection.remove_from_art_collection(artwork)
-            logging.info("Artwork removed from collection successfully.")
-        else:
-            logging.error("Artwork not found in collection.")
-
-    def swap_art(self, my_art, their_art, their_peer):
-        """
-        Swap artwork between two collections and update the owners in the ledger
-        """
-
-        self.art_collection.remove_from_art_collection(my_art)
-        their_peer.art_collection.remove_from_art_collection(their_art)
-        self.art_collection.add_to_art_collection(their_art)
-        their_peer.art_collection.add_to_art_collection(my_art)
-        their_art.ledger.add_owner(self)
-        my_art.ledger.add_owner(their_peer)
-        logging.info("Artwork successfully swapped and owners updated in ledger.")
 
 
 async def main():
