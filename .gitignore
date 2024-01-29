@@ -91,3 +91,9 @@ ENV/
 
 # Spin up script
 devops/deploy/port_list.txt
+
+# vscode config
+.vscode/
+
+# image from peer testing
+canvas.png
