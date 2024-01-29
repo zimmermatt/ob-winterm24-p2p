@@ -1,3 +1,7 @@
+### os files ###
+# macos
+.DS_Store
+
 ### python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -95,3 +99,6 @@ devops/deploy/keys/
 
 # VSCode directory
 .vscode/
+
+# image from peer testing
+canvas.png

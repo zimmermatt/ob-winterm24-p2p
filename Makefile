@@ -21,7 +21,7 @@ ruff:
 
 run:
 	export PYTHONPATH=src/main/py; \
-		python3 -m sample_module.udp_server 42422
+		python3 -m peer.peer 50000 "src/test/py/resources/peer_test" "127.0.0.1:50000"
 
 test: ruff pylint
 	export PYTHONPATH=src/main/py; \
@@ -30,4 +30,3 @@ test: ruff pylint
 		  --top-level-directory .
 	coverage report
 	coverage html
-

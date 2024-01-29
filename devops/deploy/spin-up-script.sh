@@ -35,7 +35,7 @@ port=$PSTART
 while [ ${COUNT} -le ${NUM_PORTS} ]
 do
   #Check for Open ports, if open then OK, else continue
-  if ! netstat -apn | grep -q "$IP:$port" 
+  if ! netstat -apn | grep -q "$IP:$port"
   then
     # Generating keys
     ssh-keygen -t ed25519 -f "keys/node${COUNT}" -N ""
@@ -48,8 +48,13 @@ do
     echo "Starting on port $port"
     echo "${COUNT},${port},${private_key},${public_key}" >> $PEER_FILE
 
-    # Calling server
-    python3 -m sample_module.udp_server ${port} &
+    # Create 2 commissioning peer, while the rest as listening peer doing the commission
+    if [ ${COUNT} -le 2 ]
+    then
+        python3 -m peer.peer ${port} "keys/node$COUNT" "${IP}:${PSTART}" < commission_input.txt &
+    else
+	python3 -m peer.contributing_peer ${port} "keys/node$COUNT" "${IP}:${PSTART}" &
+    fi
     ((port++))
     ((COUNT++))
   else

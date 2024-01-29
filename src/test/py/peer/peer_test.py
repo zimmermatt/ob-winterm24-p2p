@@ -10,8 +10,10 @@ import logging
 import pickle
 import unittest
 from unittest.mock import patch, MagicMock, AsyncMock
-from peer.peer import Peer
 from PIL import Image
+from commission.artwork import Artwork
+from peer.peer import Peer
+from peer.ledger import Ledger
 
 
 class MockNode:
@@ -51,6 +53,8 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
     Class to test peer functionality.
     """
 
+    # pylint: disable=too-many-instance-attributes
+
     test_logger = logging.getLogger("TestPeer")
 
     def setUp(self):
@@ -60,7 +64,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
 
         self.mock_kdm = MagicMock()
         self.mock_node = AsyncMock(spec=MockNode)
-        self.mock_kdm.network.NotifyingServer.return_value = self.mock_node
+        self.mock_kdm.return_value = self.mock_node
         self.peer = Peer(
             5001,
             "src/test/py/resources/peer_test",
@@ -68,6 +72,13 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             self.mock_kdm,
         )
         self.deadline_task = None
+        self.ledger = Ledger()
+        self.artwork1 = Artwork(10, 10, timedelta(minutes=10), self.ledger)
+        self.artwork2 = Artwork(10, 10, timedelta(minutes=10), self.ledger)
+        self.peer2 = Peer(
+            8000, "src/test/py/resources/peer_test", "127.0.0.1:5000", self.mock_kdm
+        )
+        self.ledger = Ledger()
 
     def test_initialization(self):
         """
@@ -115,6 +126,28 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             await self.deadline_task
             self.assertEqual(self.mock_node.set.call_count, 2)
 
+    def test_add_owner(self):
+        """
+        Test the add_owner method of Ledger
+        """
+
+        self.ledger.add_owner(self.peer)
+        self.assertEqual(self.ledger.queue[-1][0], self.peer)
+
+    def test_verify_integrity(self):
+        """
+        Test the verify_integrity method of Ledger
+        """
+
+        self.ledger.add_owner(self.peer)
+        self.assertTrue(self.ledger.verify_integrity())
+
+        self.ledger.add_owner(self.peer2)
+        self.assertTrue(self.ledger.verify_integrity())
+
+        self.ledger.queue[0] = (self.peer, b"corrupted_hash")
+        self.assertFalse(self.ledger.verify_integrity())
+
     def test_sign_artwork(self):
         """
         Test signing artwork with peer's private key.
@@ -149,7 +182,9 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
 
         signature = self.peer.sign_artwork(canvas)
         verification = self.peer.verify_artwork(
-            signature=signature, public_key_string=self.peer.public_key, artwork=canvas
+            signature=signature,
+            public_key_string=self.peer.keys["public"],
+            artwork=canvas,
         )
         self.assertEqual(verification, True)
 
