@@ -14,7 +14,7 @@ import sys
 from PIL import Image
 import server as kademlia
 from commission.artwork import Artwork
-from ledger.ledger import Ledger
+from peer.ledger import Ledger
 from peer.inventory import Inventory
 from trade.offer_response import OfferResponse
 from trade.offer_announcement import OfferAnnouncement
@@ -314,7 +314,7 @@ class Peer:
         canvas.save("canvas.png", "PNG")
         return canvas
 
-    async def create_new_ledger(self) -> Ledger:
+    async def create_new_ledger_entry(self) -> Ledger:
         """
         Create a new ledger for the artwork
         """
