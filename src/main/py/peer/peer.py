@@ -12,7 +12,7 @@ import pickle
 import logging
 import sys
 from PIL import Image
-import server as kademlia
+from server.network import NotifyingServer as kademlia
 from commission.artwork import Artwork
 from peer.ledger import Ledger
 from peer.inventory import Inventory
@@ -287,7 +287,7 @@ class Peer:
         Connect to the kademlia network.
         """
 
-        self.node = self.kdm.network.NotifyingServer(
+        self.node = self.kdm(
             self.data_stored_callback,
             node_id=hashlib.sha1(self.keys["public"].encode()).digest(),
         )
@@ -336,12 +336,12 @@ async def main():
     logging.basicConfig(
         format="%(asctime)s %(name)s %(levelname)s | %(message)s", level=logging.INFO
     )
-    port_num = sys.argv[1]
+    port_num = int(sys.argv[1])
     key_filename = sys.argv[2]
     if len(sys.argv) == 3:
         address = None
     else:
-        address = sys.argv[2]
+        address = sys.argv[3]
     peer = Peer(port_num, key_filename, address, kademlia)
     await peer.connect_to_network()
     await peer.commission_art_piece()

@@ -48,8 +48,13 @@ do
     echo "Starting on port $port"
     echo "${COUNT},${port},${private_key},${public_key}" >> $PEER_FILE
 
-    # Calling server
-    python3 -m sample_module.udp_server ${port} &
+    # Create 2 commissioning peer, while the rest as listening peer doing the commission
+    if [ ${COUNT} -le 2 ]
+    then
+        python3 -m peer.peer ${port} "keys/node$COUNT" "${IP}:${PSTART}" < commission_input.txt &
+    else
+	python3 -m peer.contributing_peer ${port} "keys/node$COUNT" "${IP}:${PSTART}" &
+    fi
     ((port++))
     ((COUNT++))
   else
