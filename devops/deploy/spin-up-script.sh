@@ -2,7 +2,7 @@
 
 # Just a basic script to spin up listening servers on different ports in dynamic port range
 # Setting up variables
-PSTART=${1:-50000}
+PSTART=${1:-50001}
 PEND=${2:-50050}
 PEER_FILE="peer_list.txt"
 IP="127.0.0.1"
@@ -49,7 +49,7 @@ do
     echo "${COUNT},${port},${private_key},${public_key}" >> $PEER_FILE
 
     # Calling server
-    python3 -m sample_module.udp_server ${port} &
+    python3 -m peer.peer ${port} "keys/node$COUNT" "127.0.0.1:50000" &
     ((port++))
     ((COUNT++))
   else

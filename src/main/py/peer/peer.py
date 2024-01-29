@@ -336,7 +336,7 @@ async def main():
     logging.basicConfig(
         format="%(asctime)s %(name)s %(levelname)s | %(message)s", level=logging.INFO
     )
-    port_num = sys.argv[1]
+    port_num = int(sys.argv[1])
     key_filename = sys.argv[2]
     if len(sys.argv) == 3:
         address = None

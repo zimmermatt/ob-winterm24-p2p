@@ -148,6 +148,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.ledger.queue[0] = (self.peer, b"corrupted_hash")
         self.assertFalse(self.ledger.verify_integrity())
 
+
 if __name__ == "__main__":
     # Create an event loop
     loop = asyncio.get_event_loop()
