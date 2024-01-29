@@ -12,6 +12,7 @@ import pickle
 import logging
 import sys
 from PIL import Image
+from cryptography.hazmat.primitives import serialization, hashes
 import server as kademlia
 from commission.artwork import Artwork
 
@@ -190,6 +191,61 @@ class Peer:
 
         canvas.save("canvas.png", "PNG")
         return canvas
+
+    def sign_artwork(self, artwork: Image) -> bytes:
+        """
+        Sign the artwork with peer's private key for originality.
+
+        Args:
+            artwork (Image): artwork final Image object.
+        """
+
+        private_key_string = self.private_key
+        private_key = serialization.load_ssh_private_key(
+            private_key_string.encode("utf-8"),
+            password=None,
+        )
+        artwork = pickle.dumps(artwork)
+
+        artwork_hash = hashes.Hash(hashes.SHA256())
+        artwork_hash.update(artwork)
+        digest = artwork_hash.finalize()
+
+        signature = private_key.sign(digest)
+
+        return signature
+
+    # pylint: disable=broad-except
+    def verify_artwork(
+        self, signature: bytes, public_key_string: str, artwork: Image
+    ) -> bool:
+        """
+        Verify if artwork belongs to the peer corresponding to the public_key_string
+
+        Args:
+            signature (bytes): signature corresponding to the artwork
+            public_key_string (str): public key string of peer who's supposed to own the artwork
+            artwork (Image): the artwork object
+
+        Returns:
+            bool: True if artwork verified, False otherwise
+        """
+        public_key = serialization.load_ssh_public_key(
+            public_key_string.encode("utf-8")
+        )
+
+        artwork = pickle.dumps(artwork)
+
+        artwork_hash = hashes.Hash(hashes.SHA256())
+        artwork_hash.update(artwork)
+        digest = artwork_hash.finalize()
+
+        try:
+            public_key.verify(signature, digest)
+            return True
+        except Exception as e:
+            self.logger.info("Signature verification failed: %s", e)
+        return False
 
 
 async def main():

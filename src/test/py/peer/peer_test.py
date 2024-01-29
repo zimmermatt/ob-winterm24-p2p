@@ -3,6 +3,7 @@
 Test Module for the Peer class
 """
 
+import random
 import asyncio
 from datetime import timedelta
 import logging
@@ -10,6 +11,7 @@ import pickle
 import unittest
 from unittest.mock import patch, MagicMock, AsyncMock
 from peer.peer import Peer
+from PIL import Image
 
 
 class MockNode:
@@ -112,6 +114,44 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             # Check that send_deadline_reached was called, which in turn calls our node's set method
             await self.deadline_task
             self.assertEqual(self.mock_node.set.call_count, 2)
+
+    def test_sign_artwork(self):
+        """
+        Test signing artwork with peer's private key.
+        """
+        canvas = Image.new(mode="RGB", size=(10, 20), color=(255, 255, 255))
+        pixels = canvas.load()
+
+        for x in range(10):
+            for y in range(20):
+                choice = bool(random.getrandbits(1))
+                if choice:
+                    pixels[x, y] = (0, 0, 255)
+
+        signature = self.peer.sign_artwork(canvas)
+        self.assertIsInstance(signature, bytes)
+
+    def test_verify_artwork(self):
+        """
+        Test verify_artwork
+        """
+        # generate image
+        canvas = Image.new(mode="RGB", size=(10, 20), color=(255, 255, 255))
+        pixels = canvas.load()
+
+        for x in range(10):
+            for y in range(20):
+                choice = bool(random.getrandbits(1))
+                if choice:
+                    pixels[x, y] = (0, 0, 255)
+
+        canvas.save("canvas.png", "PNG")
+
+        signature = self.peer.sign_artwork(canvas)
+        verification = self.peer.verify_artwork(
+            signature=signature, public_key_string=self.peer.public_key, artwork=canvas
+        )
+        self.assertEqual(verification, True)
 
 
 if __name__ == "__main__":
