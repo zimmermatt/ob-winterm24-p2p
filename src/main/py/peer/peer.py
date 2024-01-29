@@ -12,8 +12,9 @@ import pickle
 import logging
 import sys
 from PIL import Image
-import server as kademlia
+from server.network import NotifyingServer as kademlia
 from commission.artwork import Artwork
+from peer.ledger import Ledger
 from peer.inventory import Inventory
 from trade.offer_response import OfferResponse
 from trade.offer_announcement import OfferAnnouncement
@@ -21,6 +22,7 @@ from trade.trade_confirmation import TradeConfirmation
 import utils
 
 
+# pylint: disable=too-many-instance-attributes
 class Peer:
     """Class to manage peer functionality"""
 
@@ -60,6 +62,7 @@ class Peer:
         self.kdm = kdm
         self.node = None
         self.inventory = Inventory()
+        self.ledger = Ledger()
 
     async def send_deadline_reached(self, commission: Artwork) -> None:
         """
@@ -88,8 +91,7 @@ class Peer:
         deadline_seconds = commission.get_remaining_time()
         asyncio.get_event_loop().call_later(
             deadline_seconds,
-            asyncio.create_task,
-            self.send_deadline_reached(commission),
+            await self.send_deadline_reached(commission),
         )
 
     async def send_commission_request(self, commission: Artwork) -> None:
@@ -123,6 +125,7 @@ class Peer:
                     width,
                     height,
                     timedelta(seconds=wait_time),
+                    self.ledger,
                     originator_public_key=self.keys["public"],
                 )
                 await self.send_commission_request(commission)
@@ -238,7 +241,9 @@ class Peer:
             )
             if set_success:
                 self.logger.info("Fragment sent")
-                self.inventory.remove_owned_artwork(self.inventory.pending_trades[response.trade_id].get_artwork_key())
+                self.inventory.remove_owned_artwork(
+                    self.inventory.pending_trades[response.trade_id].get_artwork_key()
+                )
                 # ledger update here for our owned artwork
                 # update the artwork in the dht with a set
                 artwork_received = self.node.get(response.offer_id)
@@ -337,7 +342,7 @@ class Peer:
         Connect to the kademlia network.
         """
 
-        self.node = self.kdm.network.NotifyingServer(
+        self.node = self.kdm(
             self.data_stored_callback,
             node_id=hashlib.sha1(self.keys["public"].encode()).digest(),
         )
@@ -386,25 +391,16 @@ class Peer:
         except ValueError as e:
             logging.error("Failed to remove artwork from collection: %s", e)
 
-    def swap_art(self, my_art, their_art, my_art_collection, their_art_collection):
+    async def create_new_ledger_entry(self) -> Ledger:
         """
-        Swap artwork between two collections
+        Create a new ledger for the artwork
         """
 
-        try:
-            if (
-                my_art in my_art_collection.get_artworks()
-                and their_art in their_art_collection.get_artworks()
-            ):
-                my_art_collection.remove_from_art_collection(my_art)
-                their_art_collection.remove_from_art_collection(their_art)
-                my_art_collection.add_to_art_collection(their_art)
-                their_art_collection.add_to_art_collection(my_art)
-                logging.info("Artwork successfully swapped.")
-            else:
-                logging.warning("Artwork not found in collections.")
-        except ValueError as e:
-            logging.error("Failed to swap artwork: %s", e)
+        add = await self.ledger.add_owner(self)
+        if not add:
+            self.logger.error("Failed to add owner to ledger")
+            return
+        return add
 
 
 async def main():
@@ -417,15 +413,15 @@ async def main():
     logging.basicConfig(
         format="%(asctime)s %(name)s %(levelname)s | %(message)s", level=logging.INFO
     )
-    port_num = sys.argv[1]
+    port_num = int(sys.argv[1])
     key_filename = sys.argv[2]
     if len(sys.argv) == 3:
         address = None
     else:
-        address = sys.argv[2]
+        address = sys.argv[3]
     peer = Peer(port_num, key_filename, address, kademlia)
     await peer.connect_to_network()
-    await peer.commission_art_piece()
+    # await peer.commission_art_piece()
 
 
 if __name__ == "__main__":

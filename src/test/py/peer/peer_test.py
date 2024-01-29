@@ -9,9 +9,9 @@ import logging
 import pickle
 import unittest
 from unittest.mock import patch, MagicMock, AsyncMock
-from peer.peer import Peer
-from commission.artcollection import ArtCollection
 from commission.artwork import Artwork
+from peer.peer import Peer
+from peer.ledger import Ledger
 
 
 class MockNode:
@@ -62,7 +62,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
 
         self.mock_kdm = MagicMock()
         self.mock_node = AsyncMock(spec=MockNode)
-        self.mock_kdm.network.NotifyingServer.return_value = self.mock_node
+        self.mock_kdm.return_value = self.mock_node
         self.peer = Peer(
             5001,
             "src/test/py/resources/peer_test",
@@ -70,10 +70,15 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             self.mock_kdm,
         )
         self.deadline_task = None
-        self.collection1 = ArtCollection()
-        self.collection2 = ArtCollection()
-        self.artwork1 = Artwork(100.0, 100.0, timedelta(days=1))
-        self.artwork2 = Artwork(200.0, 200.0, timedelta(days=2))
+        self.ledger = Ledger()
+        self.artwork1 = Artwork(10, 10, timedelta(minutes=10), self.ledger)
+        self.artwork2 = Artwork(10, 10, timedelta(minutes=10), self.ledger)
+        self.peer2 = Peer(
+            8000, "src/test/py/resources/peer_test", "127.0.0.1:5000", self.mock_kdm
+        )
+        self.ledger = Ledger()
+        self.peer.keys = {"public": "public_key1"}
+        self.peer2.keys = {"public": "public_key2"}
 
     def test_initialization(self):
         """
@@ -121,36 +126,27 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             await self.deadline_task
             self.assertEqual(self.mock_node.set.call_count, 2)
 
-    def test_add_to_art_collection(self):
+    def test_add_owner(self):
         """
-        Test case for the add_to_art_collection method of the Peer class.
-        This test verifies that the add_to_art_collection method correctly
-        adds an artwork to a collection.
+        Test the add_owner method of Ledger
         """
-        self.peer.add_to_art_collection(self.artwork1, self.collection1)
-        self.assertIn(self.artwork1, self.collection1.get_artworks())
 
-    def test_remove_from_art_collection(self):
-        """
-        Test case for the remove_from_art_collection method of the Peer class.
-        This test verifies that the remove_from_art_collection method correctly
-        """
-        self.collection1.add_to_art_collection(self.artwork1)
-        self.peer.remove_from_art_collection(self.artwork1, self.collection1)
-        self.assertNotIn(self.artwork1, self.collection1.get_artworks())
+        self.ledger.add_owner(self.peer)
+        self.assertEqual(self.ledger.queue[-1][0], self.peer)
 
-    def test_swap_art(self):
+    def test_verify_integrity(self):
         """
-        Test case for the swap_art method of the Peer class.
-        This test verifies that the swap_art method correctly swaps artworks
+        Test the verify_integrity method of Ledger
         """
-        self.collection1.add_to_art_collection(self.artwork1)
-        self.collection2.add_to_art_collection(self.artwork2)
-        self.peer.swap_art(
-            self.artwork1, self.artwork2, self.collection1, self.collection2
-        )
-        self.assertIn(self.artwork1, self.collection2.get_artworks())
-        self.assertIn(self.artwork2, self.collection1.get_artworks())
+
+        self.ledger.add_owner(self.peer)
+        self.assertTrue(self.ledger.verify_integrity())
+
+        self.ledger.add_owner(self.peer2)
+        self.assertTrue(self.ledger.verify_integrity())
+
+        self.ledger.queue[0] = (self.peer, b"corrupted_hash")
+        self.assertFalse(self.ledger.verify_integrity())
 
 
 if __name__ == "__main__":
