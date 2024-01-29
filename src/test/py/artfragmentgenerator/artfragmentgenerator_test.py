@@ -5,6 +5,7 @@ Simple Test Module for the ArtFragmentGenerator class
 """
 
 import unittest
+from unittest.mock import Mock
 from datetime import timedelta
 from commission.artfragmentgenerator import generate_subcanvas, generate_pixels
 from commission.artwork import Artwork
@@ -18,7 +19,9 @@ class TestArtFragmentGenerator(unittest.TestCase):
     def setUp(self):
         """Create an instance of ArtFragmentGenerator based on an Artwork"""
         constraint = Constraint(Color(0, 8, 3, 255), "straight")
-        self.artwork = Artwork(10, 20, timedelta(seconds=0.5), constraint=constraint)
+        self.artwork = Artwork(
+            10, 20, timedelta(seconds=0.5), Mock(), constraint=constraint
+        )
 
     def test_generate_subcanvas(self):
         """Test the generate_subcanvas method of ArtFragmentGenerator for bound adherence"""

@@ -7,13 +7,18 @@ import subprocess
 
 # Logging config
 logging.basicConfig(
-    filename='supervisor.log', filemode='w', format="%(asctime)s %(name)s %(levelname)s | %(message)s", level=logging.INFO
+    filename="supervisor.log",
+    filemode="w",
+    format="%(asctime)s %(name)s %(levelname)s | %(message)s",
+    level=logging.INFO,
 )
+
 
 # Placeholder for function to recover nodes recover_node(host, port)
 def recover_node(node_number, host, port):
     key_file = "node" + str(node_number)
-    subprocess.run(['python3', '-m', 'peer.peer', port, key_file, host, '&'])
+    subprocess.run(["python3", "-m", "peer.peer", port, key_file, host, "&"])
+
 
 # Function to check if a node is alive
 async def ping_node(node_number, host, port):
@@ -29,10 +34,11 @@ async def ping_node(node_number, host, port):
             writer.close()
             await writer.wait_closed()
 
+
 # Main Function
 async def main():
     peer_file = "peer_list.txt"
-    
+
     peer_list = []
     with open(peer_file, "r") as file:
         for line in file:
@@ -42,6 +48,7 @@ async def main():
         for i in range(len(peer_list)):
             await ping_node(i + 1, "127.0.0.1", peer_list[i][1])
         await asyncio.sleep(5)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
