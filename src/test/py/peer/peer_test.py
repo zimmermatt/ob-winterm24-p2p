@@ -77,9 +77,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             8000, "src/test/py/resources/peer_test", "127.0.0.1:5000", self.mock_kdm
         )
         self.ledger = Ledger()
-        # self.mock_peer1 = MagicMock()
         self.peer.keys = {"public": "public_key1"}
-        # self.mock_peer2 = MagicMock()
         self.peer2.keys = {"public": "public_key2"}
 
     def test_initialization(self):
@@ -149,7 +147,6 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
 
         self.ledger.queue[0] = (self.peer, b"corrupted_hash")
         self.assertFalse(self.ledger.verify_integrity())
-
 
 if __name__ == "__main__":
     # Create an event loop
