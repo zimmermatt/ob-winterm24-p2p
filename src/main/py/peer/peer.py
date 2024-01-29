@@ -287,7 +287,7 @@ class Peer:
         else:
             self.logger.error("Invalid object received")
 
-    async def connect_to_network(self):
+    async def connect_to_network(self, wait_time=0):
         """
         Connect to the kademlia network.
         """
@@ -297,6 +297,7 @@ class Peer:
             node_id=hashlib.sha1(self.keys["public"].encode()).digest(),
         )
         await self.node.listen(self.port)
+        time.sleep(wait_time)
         if self.network_ip_address is not None:
             await self.node.bootstrap(
                 [(str(self.network_ip_address), self.network_port_num)]
@@ -348,7 +349,7 @@ async def main():
     else:
         address = sys.argv[3]
     peer = Peer(port_num, key_filename, address, kademlia)
-    await peer.connect_to_network()
+    await peer.connect_to_network(5)
     await peer.commission_art_piece()
     while True:
         time.sleep(1)
