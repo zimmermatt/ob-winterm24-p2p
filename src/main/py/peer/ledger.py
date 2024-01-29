@@ -16,18 +16,16 @@ class Ledger:
 
     def __init__(self) -> None:
         self.queue = collections.deque()
-        self.top = None
 
     def add_owner(self, peer):
         """
         Add a new owner to the ledger.
         """
 
-        previous_hash = self.top.digest() if self.top else b""
+        previous_hash = self.queue[-1][1] if len(self.queue) > 0 else b""
         new_hash = hashlib.sha256(peer.keys["public"].encode()).digest()
         combined_hash = previous_hash + new_hash
-        self.top = hashlib.sha256(combined_hash)
-        self.queue.append((peer, self.top.digest()))
+        self.queue.append((peer, hashlib.sha256(combined_hash).digest()))
 
     def verify_integrity(self):
         """
