@@ -15,8 +15,7 @@ class TestArtwork(unittest.TestCase):
 
     def setUp(self):
         """Create an instance of Artwork with width=10, height=20, and wait_time=0.5"""
-        mock_ledger = Mock()
-        self.artwork = Artwork(10, 20, timedelta(seconds=0.5), mock_ledger)
+        self.artwork = Artwork(10, 20, timedelta(seconds=0.5), Mock())
 
     def test_initialization(self):
         """Check if the attributes are initialized correctly"""
@@ -28,7 +27,6 @@ class TestArtwork(unittest.TestCase):
     def test_generate_key(self):
         """Test the generate_file_descriptor method of Artwork"""
         descriptor = self.artwork.key
-        # Assuming the descriptor should be a string
         self.assertIsInstance(descriptor, bytes)
 
 

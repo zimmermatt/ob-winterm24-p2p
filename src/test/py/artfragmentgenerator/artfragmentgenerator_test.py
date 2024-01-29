@@ -18,10 +18,9 @@ class TestArtFragmentGenerator(unittest.TestCase):
 
     def setUp(self):
         """Create an instance of ArtFragmentGenerator based on an Artwork"""
-        self.mock_ledger = Mock()
         constraint = Constraint(Color(0, 8, 3, 255), "straight")
         self.artwork = Artwork(
-            10, 20, timedelta(seconds=0.5), self.mock_ledger, constraint=constraint
+            10, 20, timedelta(seconds=0.5), Mock(), constraint=constraint
         )
 
     def test_generate_subcanvas(self):

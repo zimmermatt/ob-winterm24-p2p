@@ -10,8 +10,8 @@ import pickle
 import unittest
 from unittest.mock import patch, MagicMock, AsyncMock
 from commission.artwork import Artwork
-from ledger.ledger import Ledger
 from peer.peer import Peer
+from peer.ledger import Ledger
 
 
 class MockNode:
@@ -76,6 +76,11 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.peer2 = Peer(
             8000, "src/test/py/resources/peer_test", "127.0.0.1:5000", self.mock_kdm
         )
+        self.ledger = Ledger()
+        # self.mock_peer1 = MagicMock()
+        self.peer.keys = {"public": "public_key1"}
+        # self.mock_peer2 = MagicMock()
+        self.peer2.keys = {"public": "public_key2"}
 
     def test_initialization(self):
         """
@@ -122,6 +127,28 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             # Check that send_deadline_reached was called, which in turn calls our node's set method
             await self.deadline_task
             self.assertEqual(self.mock_node.set.call_count, 2)
+
+    def test_add_owner(self):
+        """
+        Test the add_owner method of Ledger
+        """
+
+        self.ledger.add_owner(self.peer)
+        self.assertEqual(self.ledger.queue[-1][0], self.peer)
+
+    def test_verify_integrity(self):
+        """
+        Test the verify_integrity method of Ledger
+        """
+
+        self.ledger.add_owner(self.peer)
+        self.assertTrue(self.ledger.verify_integrity())
+
+        self.ledger.add_owner(self.peer2)
+        self.assertTrue(self.ledger.verify_integrity())
+
+        self.ledger.queue[0] = (self.peer, b"corrupted_hash")
+        self.assertFalse(self.ledger.verify_integrity())
 
 
 if __name__ == "__main__":

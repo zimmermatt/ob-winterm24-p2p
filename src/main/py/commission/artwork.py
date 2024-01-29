@@ -9,6 +9,7 @@ from collections import namedtuple
 from datetime import datetime, timedelta
 from drawing.coordinates import Coordinates
 from drawing.color import Color
+from peer.ledger import Ledger
 import utils
 
 Pixel = namedtuple("Pixel", ["coordinates", "color"])
@@ -28,7 +29,7 @@ class Artwork:
         width: float,
         height: float,
         wait_time: timedelta,
-        ledger,
+        ledger: Ledger,
         constraint: Constraint = None,
         originator_public_key: str = "",
     ):

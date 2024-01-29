@@ -19,10 +19,9 @@ class TestArtFragment(unittest.TestCase):
 
     def setUp(self):
         """Create an instance of ArtFragment based on an Artwork"""
-        mock_ledger = Mock()
         constraint = Constraint(Color(0, 8, 3, 255), "straight")
         self.artwork = Artwork(
-            10, 20, timedelta(seconds=0.5), mock_ledger, constraint=constraint
+            10, 20, timedelta(seconds=0.5), Mock(), constraint=constraint
         )
         self.artfragment = generate_fragment(self.artwork, "1")
 
