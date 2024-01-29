@@ -14,12 +14,14 @@ import sys
 from PIL import Image
 import server as kademlia
 from commission.artwork import Artwork
+from ledger.ledger import Ledger
 from peer.inventory import Inventory
 from trade.offer_response import OfferResponse
 from trade.offer_announcement import OfferAnnouncement
 import utils
 
 
+# pylint: disable=too-many-instance-attributes
 class Peer:
     """Class to manage peer functionality"""
 
@@ -59,6 +61,7 @@ class Peer:
         self.kdm = kdm
         self.node = None
         self.inventory = Inventory()
+        self.ledger = Ledger()
 
     async def send_deadline_reached(self, commission: Artwork) -> None:
         """
@@ -122,6 +125,7 @@ class Peer:
                     width,
                     height,
                     timedelta(seconds=wait_time),
+                    self.ledger,
                     originator_public_key=self.keys["public"],
                 )
                 await self.send_commission_request(commission)
@@ -309,47 +313,17 @@ class Peer:
 
         canvas.save("canvas.png", "PNG")
         return canvas
-    def add_to_art_collection(self, artwork, collection):
+
+    async def create_new_ledger(self) -> Ledger:
         """
-        Add artwork to collection
+        Create a new ledger for the artwork
         """
 
-        try:
-            collection.add_to_art_collection(artwork)
-            logging.info("Artwork successfully added to collection.")
-        except ValueError as e:
-            logging.error("Failed to add artwork to collection: %s", e)
-
-    def remove_from_art_collection(self, artwork, collection):
-        """
-        Remove artwork from collection
-        """
-
-        try:
-            collection.remove_from_art_collection(artwork)
-            logging.info("Artwork removed from collection successfully.")
-        except ValueError as e:
-            logging.error("Failed to remove artwork from collection: %s", e)
-
-    def swap_art(self, my_art, their_art, my_art_collection, their_art_collection):
-        """
-        Swap artwork between two collections
-        """
-
-        try:
-            if (
-                my_art in my_art_collection.get_artworks()
-                and their_art in their_art_collection.get_artworks()
-            ):
-                my_art_collection.remove_from_art_collection(my_art)
-                their_art_collection.remove_from_art_collection(their_art)
-                my_art_collection.add_to_art_collection(their_art)
-                their_art_collection.add_to_art_collection(my_art)
-                logging.info("Artwork successfully swapped.")
-            else:
-                logging.warning("Artwork not found in collections.")
-        except ValueError as e:
-            logging.error("Failed to swap artwork: %s", e)
+        add = await self.ledger.add_owner(self)
+        if not add:
+            self.logger.error("Failed to add owner to ledger")
+            return
+        return add
 
 
 async def main():

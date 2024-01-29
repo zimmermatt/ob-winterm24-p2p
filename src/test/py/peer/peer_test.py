@@ -9,9 +9,9 @@ import logging
 import pickle
 import unittest
 from unittest.mock import patch, MagicMock, AsyncMock
-from peer.peer import Peer
-from commission.artcollection import ArtCollection
 from commission.artwork import Artwork
+from ledger.ledger import Ledger
+from peer.peer import Peer
 
 
 class MockNode:
@@ -70,10 +70,12 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             self.mock_kdm,
         )
         self.deadline_task = None
-        self.collection1 = ArtCollection()
-        self.collection2 = ArtCollection()
-        self.artwork1 = Artwork(100.0, 100.0, timedelta(days=1))
-        self.artwork2 = Artwork(200.0, 200.0, timedelta(days=2))
+        self.ledger = Ledger()
+        self.artwork1 = Artwork(10, 10, timedelta(minutes=10), self.ledger)
+        self.artwork2 = Artwork(10, 10, timedelta(minutes=10), self.ledger)
+        self.peer2 = Peer(
+            8000, "src/test/py/resources/peer_test", "127.0.0.1:5000", self.mock_kdm
+        )
 
     def test_initialization(self):
         """
@@ -120,37 +122,6 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             # Check that send_deadline_reached was called, which in turn calls our node's set method
             await self.deadline_task
             self.assertEqual(self.mock_node.set.call_count, 2)
-
-    def test_add_to_art_collection(self):
-        """
-        Test case for the add_to_art_collection method of the Peer class.
-        This test verifies that the add_to_art_collection method correctly
-        adds an artwork to a collection.
-        """
-        self.peer.add_to_art_collection(self.artwork1, self.collection1)
-        self.assertIn(self.artwork1, self.collection1.get_artworks())
-
-    def test_remove_from_art_collection(self):
-        """
-        Test case for the remove_from_art_collection method of the Peer class.
-        This test verifies that the remove_from_art_collection method correctly
-        """
-        self.collection1.add_to_art_collection(self.artwork1)
-        self.peer.remove_from_art_collection(self.artwork1, self.collection1)
-        self.assertNotIn(self.artwork1, self.collection1.get_artworks())
-
-    def test_swap_art(self):
-        """
-        Test case for the swap_art method of the Peer class.
-        This test verifies that the swap_art method correctly swaps artworks
-        """
-        self.collection1.add_to_art_collection(self.artwork1)
-        self.collection2.add_to_art_collection(self.artwork2)
-        self.peer.swap_art(
-            self.artwork1, self.artwork2, self.collection1, self.collection2
-        )
-        self.assertIn(self.artwork1, self.collection2.get_artworks())
-        self.assertIn(self.artwork2, self.collection1.get_artworks())
 
 
 if __name__ == "__main__":

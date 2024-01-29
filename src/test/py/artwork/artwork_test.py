@@ -6,6 +6,7 @@ Simple Test Module for the Artwork class
 
 from datetime import timedelta
 import unittest
+from unittest.mock import Mock
 from commission.artwork import Artwork
 
 
@@ -14,7 +15,8 @@ class TestArtwork(unittest.TestCase):
 
     def setUp(self):
         """Create an instance of Artwork with width=10, height=20, and wait_time=0.5"""
-        self.artwork = Artwork(10, 20, timedelta(seconds=0.5))
+        mock_ledger = Mock()
+        self.artwork = Artwork(10, 20, timedelta(seconds=0.5), mock_ledger)
 
     def test_initialization(self):
         """Check if the attributes are initialized correctly"""

@@ -28,6 +28,7 @@ class Artwork:
         width: float,
         height: float,
         wait_time: timedelta,
+        ledger,
         constraint: Constraint = None,
         originator_public_key: str = "",
     ):
@@ -37,6 +38,7 @@ class Artwork:
         - height (float): The height of the artwork in pixels.
         - wait_time (timedelta): The wait time for the artwork as a timedelta.
         - constraint (Constraint): Constraint instance set to the artwork.
+        - ledger: An instance of the Ledger class.
         """
         self.width = width
         self.height = height
@@ -47,6 +49,7 @@ class Artwork:
         start_time = datetime.now()
         self.end_time = start_time + self.wait_time
         self.originator_public_key = originator_public_key
+        self.ledger = ledger
 
     def get_remaining_time(self):
         """
