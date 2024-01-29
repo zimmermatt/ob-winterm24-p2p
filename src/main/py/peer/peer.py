@@ -4,6 +4,7 @@ Module to manage peer functionality.
 
 Peer class allows us to join the network, commission artwork, and generate fragments to share
 """
+import time
 import asyncio
 from datetime import timedelta
 import hashlib
@@ -52,6 +53,9 @@ class Peer:
                 raise ValueError(
                     "Invalid network address. Please provide a valid network address."
                 ) from exc
+        else:
+            self.network_port_num = None
+            self.network_ip_address = None
         self.port = port
         self.keys = {}
         with open(f"{key_filename}.pub", "r", encoding="utf-8") as public_key_file:
@@ -80,6 +84,7 @@ class Peer:
             self.inventory.add_owned_artwork(commission)
             self.inventory.remove_commission(commission)
         except TypeError:
+            self.logger.info(commission)
             self.logger.error("Commission type is not pickleable")
 
     async def setup_deadline_timer(self, commission: Artwork) -> None:
@@ -90,8 +95,7 @@ class Peer:
         deadline_seconds = commission.get_remaining_time()
         asyncio.get_event_loop().call_later(
             deadline_seconds,
-            asyncio.create_task,
-            self.send_deadline_reached(commission),
+            await self.send_deadline_reached(commission),
         )
 
     async def send_commission_request(self, commission: Artwork) -> None:
@@ -109,6 +113,7 @@ class Peer:
                 self.logger.error("Commission failed to send")
             await self.setup_deadline_timer(commission)
         except TypeError:
+            self.logger.info(commission)
             self.logger.error("Commission type is not pickleable")
 
     async def commission_art_piece(self) -> None:
@@ -345,6 +350,9 @@ async def main():
     peer = Peer(port_num, key_filename, address, kademlia)
     await peer.connect_to_network()
     await peer.commission_art_piece()
+    while True:
+        time.sleep(1)
+        peer.node.refresh_table()
 
 
 if __name__ == "__main__":
