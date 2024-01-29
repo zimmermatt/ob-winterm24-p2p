@@ -5,7 +5,8 @@ Simple Test Module for the Constraint class
 """
 
 import unittest
-from commission.constraint import Constraint
+from commission.artwork import Constraint
+from drawing.color import Color
 
 
 class TestConstraint(unittest.TestCase):
@@ -13,11 +14,11 @@ class TestConstraint(unittest.TestCase):
 
     def setUp(self):
         """Create an instance of Constraint"""
-        self.constraint = Constraint((-1, 8, 3, 400), "straight")
+        self.constraint = Constraint(Color(0, 8, 3, 255), "straight")
 
     def test_initialization(self):
         """Check if the attributes are initialized correctly"""
-        self.assertEqual(self.constraint.color, (0, 8, 3, 255))
+        self.assertEqual(self.constraint.color.channels, (0, 8, 3, 255))
         self.assertEqual(self.constraint.line_type, "straight")
 
 

@@ -1,3 +1,7 @@
+### os files ###
+# macos
+.DS_Store
+
 ### python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -90,9 +94,10 @@ ENV/
 .ropeproject
 
 # Spin up script
-devops/deploy/port_list.txt
+devops/deploy/peer_list.txt
+devops/deploy/keys/
 
-# vscode config
+# VSCode directory
 .vscode/
 
 # image from peer testing

@@ -9,8 +9,9 @@ import logging
 import pickle
 import unittest
 from unittest.mock import patch, MagicMock, AsyncMock
-from threading import Timer
+from commission.artwork import Artwork
 from peer.peer import Peer
+from peer.ledger import Ledger
 
 
 class MockNode:
@@ -22,7 +23,7 @@ class MockNode:
         """Initializes an instance of the MockNode class."""
         self.data_store = {}
 
-    def set(self, key, value):
+    async def set(self, key, value):
         """Stores a value based on the key."""
         self.data_store[key] = value
 
@@ -50,6 +51,8 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
     Class to test peer functionality.
     """
 
+    # pylint: disable=too-many-instance-attributes
+
     test_logger = logging.getLogger("TestPeer")
 
     def setUp(self):
@@ -59,8 +62,23 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
 
         self.mock_kdm = MagicMock()
         self.mock_node = AsyncMock(spec=MockNode)
-        self.mock_kdm.network.Server.return_value = self.mock_node
-        self.peer = Peer(5001, "127.0.0.1:5000", self.mock_kdm)
+        self.mock_kdm.return_value = self.mock_node
+        self.peer = Peer(
+            5001,
+            "src/test/py/resources/peer_test",
+            "127.0.0.1:5000",
+            self.mock_kdm,
+        )
+        self.deadline_task = None
+        self.ledger = Ledger()
+        self.artwork1 = Artwork(10, 10, timedelta(minutes=10), self.ledger)
+        self.artwork2 = Artwork(10, 10, timedelta(minutes=10), self.ledger)
+        self.peer2 = Peer(
+            8000, "src/test/py/resources/peer_test", "127.0.0.1:5000", self.mock_kdm
+        )
+        self.ledger = Ledger()
+        self.peer.keys = {"public": "public_key1"}
+        self.peer2.keys = {"public": "public_key2"}
 
     def test_initialization(self):
         """
@@ -81,31 +99,54 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.peer.node.bootstrap.assert_called_once()
 
     @patch("builtins.input", side_effect=["10", "20", "10"])
-    @patch(
-        "threading.Timer",
-        side_effect=lambda delay, func, args: Timer(0, func, args),
-    )
-    def test_commission_art_piece(self, mock_input, mock_timer):
+    async def test_commission_art_piece(self, mock_input):
         """
         Test case for the commission_art_piece method of the Peer class.
         This test verifies that the commission_art_piece method correctly adds a commission,
         publishes it on Kademlia, and schedules and sends a deadline notice.
         """
-        self.test_logger.debug(mock_input, mock_timer)
-        self.peer.node = self.mock_node
-        self.peer.commission_art_piece()
-        self.assertEqual(len(self.peer.commissions), 1)
-        commission = self.peer.commissions[0]
-        self.assertEqual(commission.width, 10)
-        self.assertEqual(commission.height, 20)
-        self.assertLessEqual(commission.wait_time, timedelta(seconds=10))
-        self.mock_node.set.assert_called_with(
-            commission.get_key(), pickle.dumps(commission)
-        )
-        # Check that send_deadline_reached was called, which in turn calls our node's set method
-        self.mock_node.set.assert_called_with(
-            commission.get_key(), pickle.dumps(commission)
-        )
+        with patch(
+            "asyncio.get_event_loop",
+            return_value=MagicMock(
+                call_later=lambda *args: setattr(
+                    self, "deadline_task", asyncio.create_task(args[2])
+                )
+            ),
+        ):
+            self.test_logger.debug(mock_input)
+            self.peer.node = self.mock_node
+            commission = await self.peer.commission_art_piece()
+            self.mock_node.set.assert_called_with(
+                commission.get_key(), pickle.dumps(commission)
+            )
+            self.assertEqual(commission.width, 10)
+            self.assertEqual(commission.height, 20)
+            self.assertLessEqual(commission.wait_time, timedelta(seconds=10))
+            # Check that send_deadline_reached was called, which in turn calls our node's set method
+            await self.deadline_task
+            self.assertEqual(self.mock_node.set.call_count, 2)
+
+    def test_add_owner(self):
+        """
+        Test the add_owner method of Ledger
+        """
+
+        self.ledger.add_owner(self.peer)
+        self.assertEqual(self.ledger.queue[-1][0], self.peer)
+
+    def test_verify_integrity(self):
+        """
+        Test the verify_integrity method of Ledger
+        """
+
+        self.ledger.add_owner(self.peer)
+        self.assertTrue(self.ledger.verify_integrity())
+
+        self.ledger.add_owner(self.peer2)
+        self.assertTrue(self.ledger.verify_integrity())
+
+        self.ledger.queue[0] = (self.peer, b"corrupted_hash")
+        self.assertFalse(self.ledger.verify_integrity())
 
 
 if __name__ == "__main__":
