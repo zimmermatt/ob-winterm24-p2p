@@ -2,7 +2,7 @@
 
 # Just a basic script to spin up listening servers on different ports in dynamic port range
 # Setting up variables
-PSTART=${1:-50001}
+PSTART=${1:-50000}
 PEND=${2:-50050}
 PEER_FILE="peer_list.txt"
 IP="127.0.0.1"
@@ -48,8 +48,13 @@ do
     echo "Starting on port $port"
     echo "${COUNT},${port},${private_key},${public_key}" >> $PEER_FILE
 
-    # Calling server
-    python3 -m peer.peer ${port} "keys/node$COUNT" "127.0.0.1:50000" &
+    # Create 2 commissioning peer, while the rest as listening peer doing the commission
+    if [ ${COUNT} -le 2 ]
+    then
+        python3 -m peer.peer ${port} "keys/node$COUNT" "${IP}:${PSTART}" &
+    else
+	python3 -m peer.contributing_peer ${port} "keys/node$COUNT" "${IP}:${PSTART}" &
+    fi
     ((port++))
     ((COUNT++))
   else
