@@ -99,3 +99,6 @@ devops/deploy/keys/
 
 # VSCode directory
 .vscode/
+
+# image from peer testing
+canvas.png

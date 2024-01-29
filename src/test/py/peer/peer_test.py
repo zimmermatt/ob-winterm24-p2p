@@ -3,12 +3,14 @@
 Test Module for the Peer class
 """
 
+import random
 import asyncio
 from datetime import timedelta
 import logging
 import pickle
 import unittest
 from unittest.mock import patch, MagicMock, AsyncMock
+from PIL import Image
 from commission.artwork import Artwork
 from peer.peer import Peer
 from peer.ledger import Ledger
@@ -77,8 +79,6 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             8000, "src/test/py/resources/peer_test", "127.0.0.1:5000", self.mock_kdm
         )
         self.ledger = Ledger()
-        self.peer.keys = {"public": "public_key1"}
-        self.peer2.keys = {"public": "public_key2"}
 
     def test_initialization(self):
         """
@@ -147,6 +147,46 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
 
         self.ledger.queue[0] = (self.peer, b"corrupted_hash")
         self.assertFalse(self.ledger.verify_integrity())
+
+    def test_sign_artwork(self):
+        """
+        Test signing artwork with peer's private key.
+        """
+        canvas = Image.new(mode="RGB", size=(10, 20), color=(255, 255, 255))
+        pixels = canvas.load()
+
+        for x in range(10):
+            for y in range(20):
+                choice = bool(random.getrandbits(1))
+                if choice:
+                    pixels[x, y] = (0, 0, 255)
+
+        signature = self.peer.sign_artwork(canvas)
+        self.assertIsInstance(signature, bytes)
+
+    def test_verify_artwork(self):
+        """
+        Test verify_artwork
+        """
+        # generate image
+        canvas = Image.new(mode="RGB", size=(10, 20), color=(255, 255, 255))
+        pixels = canvas.load()
+
+        for x in range(10):
+            for y in range(20):
+                choice = bool(random.getrandbits(1))
+                if choice:
+                    pixels[x, y] = (0, 0, 255)
+
+        canvas.save("canvas.png", "PNG")
+
+        signature = self.peer.sign_artwork(canvas)
+        verification = self.peer.verify_artwork(
+            signature=signature,
+            public_key_string=self.peer.keys["public"],
+            artwork=canvas,
+        )
+        self.assertEqual(verification, True)
 
 
 if __name__ == "__main__":

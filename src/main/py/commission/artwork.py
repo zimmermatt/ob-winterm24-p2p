@@ -7,13 +7,13 @@ Artwork class allows us to create a commission, generate a file descriptor
 
 from collections import namedtuple
 from datetime import datetime, timedelta
+import utils
 from drawing.coordinates import Coordinates
 from drawing.color import Color
 from peer.ledger import Ledger
-import utils
 
 Pixel = namedtuple("Pixel", ["coordinates", "color"])
-Pixel.__annotations__ = {"coordiantes": Coordinates, "color": Color}
+Pixel.__annotations__ = {"coordinates": Coordinates, "color": Color}
 Constraint = namedtuple("Constraint", ["color", "line_type"])
 Constraint.__annotations__ = {"color": Color, "line_type": str}
 
