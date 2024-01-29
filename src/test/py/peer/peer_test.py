@@ -62,7 +62,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
 
         self.mock_kdm = MagicMock()
         self.mock_node = AsyncMock(spec=MockNode)
-        self.mock_kdm.network.NotifyingServer.return_value = self.mock_node
+        self.mock_kdm.return_value = self.mock_node
         self.peer = Peer(
             5001,
             "src/test/py/resources/peer_test",

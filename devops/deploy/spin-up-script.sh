@@ -51,7 +51,7 @@ do
     # Create 2 commissioning peer, while the rest as listening peer doing the commission
     if [ ${COUNT} -le 2 ]
     then
-        python3 -m peer.peer ${port} "keys/node$COUNT" "${IP}:${PSTART}" &
+        python3 -m peer.peer ${port} "keys/node$COUNT" "${IP}:${PSTART}" < commission_input.txt &
     else
 	python3 -m peer.contributing_peer ${port} "keys/node$COUNT" "${IP}:${PSTART}" &
     fi

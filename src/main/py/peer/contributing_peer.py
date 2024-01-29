@@ -5,7 +5,6 @@ Module to manage peer functionality.
 Peer class allows us to join the network, commission artwork, and generate fragments to share
 """
 import asyncio
-from datetime import timedelta
 import logging
 import sys
 from server.network import NotifyingServer as kademlia
@@ -23,12 +22,12 @@ async def main():
     logging.basicConfig(
         format="%(asctime)s %(name)s %(levelname)s | %(message)s", level=logging.INFO
     )
-    port_num = int(sys.argv[1])
     key_filename = sys.argv[2]
-    if len(sys.argv) == 3:
-        address = None
-    else:
+    port_num = int(sys.argv[1])
+    if len(sys.argv) != 3:
         address = sys.argv[3]
+    else:
+        address = None
     peer = Peer(port_num, key_filename, address, kademlia)
     await peer.connect_to_network()
 
