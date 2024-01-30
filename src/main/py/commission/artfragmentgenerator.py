@@ -52,7 +52,7 @@ def generate_subcanvas(width: int, height: int):
 
 def generate_pixels(subcanvas: tuple[tuple[int, int], tuple[int, int]]):
     """
-    Generate a list of pixel info that adheres to coordiantes, dimensions, constraints
+    Generate a list of pixel info that adheres to coordinates, dimensions, constraints
 
     TODO:
     - implement address-based adherence
