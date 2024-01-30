@@ -21,7 +21,7 @@ ruff:
 
 run:
 	export PYTHONPATH=src/main/py; \
-		python3 -m peer.peer 50000 "src/test/py/resources/peer_test" "127.0.0.1:50000"
+		python3 -m peer.peer 50000 "src/test/py/resources/peer_test" "0.0.0.0:50000"
 
 test: ruff pylint
 	export PYTHONPATH=src/main/py; \
