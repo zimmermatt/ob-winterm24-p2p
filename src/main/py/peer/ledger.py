@@ -16,6 +16,7 @@ class Ledger:
 
     def __init__(self) -> None:
         self.queue = collections.deque()
+        self.top = None
 
     def add_owner(self, peer):
         """
