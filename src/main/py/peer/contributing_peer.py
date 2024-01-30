@@ -4,7 +4,6 @@ Module to manage peer functionality.
 
 Peer class allows us to join the network, commission artwork, and generate fragments to share
 """
-import time
 import asyncio
 import logging
 import sys
@@ -32,7 +31,7 @@ async def main():
     peer = Peer(port_num, key_filename, address, kademlia)
     await peer.connect_to_network()
     while True:
-        time.sleep(1)
+        await asyncio.sleep(1)
         peer.node.refresh_table()
 
 

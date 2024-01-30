@@ -96,6 +96,7 @@ ENV/
 # Spin up script
 devops/deploy/peer_list.txt
 devops/deploy/keys/
+keys
 
 # VSCode directory
 .vscode/

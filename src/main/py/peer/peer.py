@@ -14,7 +14,9 @@ import logging
 import sys
 from PIL import Image
 from server.network import NotifyingServer as kademlia
+from commission.artfragment import ArtFragment
 from commission.artwork import Artwork
+from commission.artfragmentgenerator import generate_fragment
 from peer.ledger import Ledger
 from peer.inventory import Inventory
 from trade.offer_response import OfferResponse
@@ -73,6 +75,7 @@ class Peer:
         """
 
         commission.set_complete()
+        commission.ledger.add_owner(self)
         try:
             set_success = await self.node.set(
                 commission.get_key(), pickle.dumps(commission)
@@ -82,6 +85,7 @@ class Peer:
             else:
                 self.logger.error("Commission failed to complete")
             self.inventory.add_owned_artwork(commission)
+            self.inventory.commission_canvases[commission.key].save("canvas.png", "PNG")
             self.inventory.remove_commission(commission)
         except TypeError:
             self.logger.info(commission)
@@ -95,7 +99,8 @@ class Peer:
         deadline_seconds = commission.get_remaining_time()
         asyncio.get_event_loop().call_later(
             deadline_seconds,
-            await self.send_deadline_reached(commission),
+            asyncio.create_task,
+            self.send_deadline_reached(commission),
         )
 
     async def send_commission_request(self, commission: Artwork) -> None:
@@ -135,15 +140,14 @@ class Peer:
                 )
                 await self.send_commission_request(commission)
                 self.inventory.add_commission(commission)
+                self.inventory.commission_canvases[commission.key] = Image.new(
+                    "RGBA",
+                    (int(commission.width), int(commission.height)),
+                    (0, 0, 0, 0),
+                )
                 return commission
             except ValueError:
                 self.logger.error("Invalid input. Please enter a valid float.")
-
-    def generate_fragment(self, commission: Artwork):
-        """Generate a piece of the artwork"""
-
-        self.logger.info("Generating fragment")
-        return commission
 
     async def handle_announcement_deadline(self, announcement_key, offer_announcement):
         """Handle the deadline for an announcement"""
@@ -266,11 +270,14 @@ class Peer:
         message_object = pickle.loads(value)
         if isinstance(message_object, Artwork):
             self.logger.info("Received commission request")
-            if not message_object.commission_complete:
-                fragment = self.generate_fragment(message_object)
+            if (
+                not message_object.commission_complete
+                and message_object.originator_public_key != self.keys["public"]
+            ):
+                fragment = generate_fragment(message_object, self.keys["public"])
                 try:
                     set_success = await self.node.set(
-                        fragment.get_key(), pickle.dumps(fragment)
+                        utils.generate_random_sha1_hash(), pickle.dumps(fragment)
                     )
                     if set_success:
                         self.logger.info("Fragment sent")
@@ -278,6 +285,14 @@ class Peer:
                         self.logger.error("Fragment failed to send")
                 except TypeError:
                     self.logger.error("Fragment type is not pickleable")
+        elif isinstance(message_object, ArtFragment):
+            if message_object.artwork_id in self.inventory.commissions:
+                self.inventory.commissions[
+                    message_object.artwork_id
+                ] = self.merge_canvas(
+                    message_object,
+                    self.inventory.commission_canvases[message_object.artwork_id],
+                )
         elif isinstance(message_object, OfferAnnouncement):
             self.logger.info("Received trade announcement")
             await self.send_trade_response(key, message_object)
@@ -287,7 +302,7 @@ class Peer:
         else:
             self.logger.error("Invalid object received")
 
-    async def connect_to_network(self):
+    async def connect_to_network(self, wait_time=0):
         """
         Connect to the kademlia network.
         """
@@ -297,26 +312,22 @@ class Peer:
             node_id=hashlib.sha1(self.keys["public"].encode()).digest(),
         )
         await self.node.listen(self.port)
+        time.sleep(wait_time)
         if self.network_ip_address is not None:
             await self.node.bootstrap(
                 [(str(self.network_ip_address), self.network_port_num)]
             )
         self.logger.info("Running server on port %d", self.port)
 
-    def merge_canvas(self, width: int, height: int, fragment) -> Image.Image:
+    def merge_canvas(self, fragment: ArtFragment, canvas) -> Image.Image:
         """
         Merge fragments received from a Contributor Artist Peer into a complete colored canvas
         """
-        canvas = Image.new(mode="RGB", size=(width, height), color=(255, 255, 255))
         pixels = canvas.load()
 
-        for pixel in fragment:
-            x = pixel[0][0]
-            y = pixel[0][1]
+        for pixel in fragment.pixels:
             # Making them black for now
-            pixels[x, y] = fragment.get_fragment_color()
-
-        canvas.save("canvas.png", "PNG")
+            pixels[pixel.coordinates.x, pixel.coordinates.y] = pixel.color
         return canvas
 
     async def create_new_ledger_entry(self) -> Ledger:
@@ -348,11 +359,11 @@ async def main():
     else:
         address = sys.argv[3]
     peer = Peer(port_num, key_filename, address, kademlia)
-    await peer.connect_to_network()
+    await peer.connect_to_network(10)
+    time.sleep(10)
     await peer.commission_art_piece()
     while True:
-        time.sleep(1)
-        peer.node.refresh_table()
+        await asyncio.sleep(1)
 
 
 if __name__ == "__main__":

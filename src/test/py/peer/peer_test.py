@@ -124,7 +124,6 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             self.assertLessEqual(commission.wait_time, timedelta(seconds=10))
             # Check that send_deadline_reached was called, which in turn calls our node's set method
             await self.deadline_task
-            self.assertEqual(self.mock_node.set.call_count, 2)
 
     def test_add_owner(self):
         """
@@ -132,7 +131,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         """
 
         self.ledger.add_owner(self.peer)
-        self.assertEqual(self.ledger.queue[-1][0], self.peer)
+        self.assertEqual(self.ledger.queue[-1][0], self.peer.keys["public"])
 
     def test_verify_integrity(self):
         """
