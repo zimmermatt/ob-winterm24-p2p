@@ -78,6 +78,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             8000, "src/test/py/resources/peer_test", "127.0.0.1:5000", self.mock_kdm
         )
         self.ledger = Ledger()
+        self.deadline_task = None
 
     def test_initialization(self):
         """
