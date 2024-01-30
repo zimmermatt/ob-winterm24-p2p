@@ -22,10 +22,10 @@ class Ledger:
         Add a new owner to the ledger.
         """
 
-        previous_hash = self.top.digest() if self.top else b""
+        previous_hash = self.top if self.top else b""
         new_hash = hashlib.sha256(peer.keys["public"].encode()).digest()
         combined_hash = previous_hash + new_hash
-        self.top = hashlib.sha256(combined_hash)
+        self.top = hashlib.sha256(combined_hash).digest()
         self.queue.append((peer.keys["public"], self.top))
 
     def verify_integrity(self):
