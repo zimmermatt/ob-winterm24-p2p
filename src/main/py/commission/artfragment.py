@@ -17,12 +17,10 @@ class ArtFragment:
     - artwork (Artwork): Artwork that ArtFragment is contributing to
     - contributor (str): ID of peer generating the ArtFragment
     - pixels (set[Pixel]): set of pixels that fragment occupies
-    # - originator_node_id (str): ID of artwork's originator
     """
 
     artwork_id: str
     contributor: str
     pixels: frozenset[Pixel]
-    originator_public_key: str = ""
 
     logger = logging.getLogger("ArtFragment")
