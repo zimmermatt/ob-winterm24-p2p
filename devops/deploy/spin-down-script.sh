@@ -2,7 +2,7 @@
 
 PEER_LIST="peer_list.txt"
 # Now fully implemented spinning down through the peer_list.txt
-IP=127.0.0.1
+IP=0.0.0.0
 declare -a PORTS=()
 while IFS= read -r line
 do
