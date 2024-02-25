@@ -85,7 +85,7 @@ class Peer:
             else:
                 self.logger.error("Commission failed to complete")
             self.inventory.add_owned_artwork(commission)
-            self.inventory.commission_canvases[commission.key].save(f"pics/canvas13.png", "PNG")
+            self.inventory.commission_canvases[commission.key].save("pics/canvas13.png", "PNG")
             self.inventory.remove_commission(commission)
         except TypeError:
             self.logger.info(commission)
