@@ -96,9 +96,12 @@ ENV/
 # Spin up script
 devops/deploy/peer_list.txt
 devops/deploy/keys/
+devops/deploy/contributor_logs.txt
+peer_list.txt
+keys
 
 # VSCode directory
 .vscode/
 
-# image from peer testing
+# canvas
 canvas.png

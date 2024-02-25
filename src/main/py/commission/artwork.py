@@ -5,15 +5,16 @@ Module to manage artwork commission class
 Artwork class allows us to create a commission, generate a file descriptor
 """
 
+import random
 from collections import namedtuple
 from datetime import datetime, timedelta
-import utils
 from drawing.coordinates import Coordinates
 from drawing.color import Color
 from peer.ledger import Ledger
+import utils
 
 Pixel = namedtuple("Pixel", ["coordinates", "color"])
-Pixel.__annotations__ = {"coordinates": Coordinates, "color": Color}
+Pixel.__annotations__ = {"coordiantes": Coordinates, "color": Color}
 Constraint = namedtuple("Constraint", ["color", "line_type"])
 Constraint.__annotations__ = {"color": Color, "line_type": str}
 
@@ -45,12 +46,27 @@ class Artwork:
         self.height = height
         self.wait_time = wait_time
         self.commission_complete = False
-        self.constraint = constraint
+        if constraint is None:
+            self.constraint = self.generate_random_constraint()
+        else:
+            self.constraint = constraint
         self.key = utils.generate_random_sha1_hash()
         start_time = datetime.now()
         self.end_time = start_time + self.wait_time
         self.originator_public_key = originator_public_key
         self.ledger = ledger
+
+    def generate_random_constraint(self):
+        """
+        Generates a random constraint.
+        """
+        random_color = (
+            random.randint(0, 255),
+            random.randint(0, 255),
+            random.randint(0, 255),
+        )
+        random_line_type = "solid"
+        return Constraint(random_color, random_line_type)
 
     def get_remaining_time(self):
         """

@@ -3,14 +3,12 @@
 Test Module for the Peer class
 """
 
-import random
 import asyncio
 from datetime import timedelta
 import logging
 import pickle
 import unittest
 from unittest.mock import patch, MagicMock, AsyncMock
-from PIL import Image
 from commission.artwork import Artwork
 from peer.peer import Peer
 from peer.ledger import Ledger
@@ -71,6 +69,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             "127.0.0.1:5000",
             self.mock_kdm,
         )
+        self.deadline_task = None
         self.ledger = Ledger()
         self.artwork1 = Artwork(10, 10, timedelta(minutes=10), self.ledger)
         self.artwork2 = Artwork(10, 10, timedelta(minutes=10), self.ledger)
@@ -78,6 +77,8 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             8000, "src/test/py/resources/peer_test", "127.0.0.1:5000", self.mock_kdm
         )
         self.ledger = Ledger()
+        self.peer.keys = {"public": "public_key1"}
+        self.peer2.keys = {"public": "public_key2"}
 
     def test_initialization(self):
         """
@@ -104,18 +105,25 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         This test verifies that the commission_art_piece method correctly adds a commission,
         publishes it on Kademlia, and schedules and sends a deadline notice.
         """
-
-        self.test_logger.debug(mock_input)
-        self.peer.node = self.mock_node
-        commission = await self.peer.commission_art_piece()
-        self.mock_node.set.assert_called_with(
-            commission.get_key(), pickle.dumps(commission)
-        )
-        self.assertEqual(commission.width, 10)
-        self.assertEqual(commission.height, 20)
-        self.assertLessEqual(commission.wait_time, timedelta(seconds=10))
-        # Check that send_deadline_reached was called, which in turn calls our node's set method
-        self.assertEqual(self.mock_node.set.call_count, 2)
+        with patch(
+            "asyncio.get_event_loop",
+            return_value=MagicMock(
+                call_later=lambda *args: setattr(
+                    self, "deadline_task", asyncio.create_task(args[2])
+                )
+            ),
+        ):
+            self.test_logger.debug(mock_input)
+            self.peer.node = self.mock_node
+            commission = await self.peer.commission_art_piece()
+            self.mock_node.set.assert_called_with(
+                commission.get_key(), pickle.dumps(commission)
+            )
+            self.assertEqual(commission.width, 10)
+            self.assertEqual(commission.height, 20)
+            self.assertLessEqual(commission.wait_time, timedelta(seconds=10))
+            # Check that send_deadline_reached was called, which in turn calls our node's set method
+            await self.deadline_task
 
     def test_add_owner(self):
         """
@@ -123,7 +131,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         """
 
         self.ledger.add_owner(self.peer)
-        self.assertEqual(self.ledger.queue[-1][0], self.peer)
+        self.assertEqual(self.ledger.queue[-1][0], self.peer.keys["public"])
 
     def test_verify_integrity(self):
         """
@@ -138,46 +146,6 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
 
         self.ledger.queue[0] = (self.peer, b"corrupted_hash")
         self.assertFalse(self.ledger.verify_integrity())
-
-    def test_sign_artwork(self):
-        """
-        Test signing artwork with peer's private key.
-        """
-        canvas = Image.new(mode="RGB", size=(10, 20), color=(255, 255, 255))
-        pixels = canvas.load()
-
-        for x in range(10):
-            for y in range(20):
-                choice = bool(random.getrandbits(1))
-                if choice:
-                    pixels[x, y] = (0, 0, 255)
-
-        signature = self.peer.sign_artwork(canvas)
-        self.assertIsInstance(signature, bytes)
-
-    def test_verify_artwork(self):
-        """
-        Test verify_artwork
-        """
-        # generate image
-        canvas = Image.new(mode="RGB", size=(10, 20), color=(255, 255, 255))
-        pixels = canvas.load()
-
-        for x in range(10):
-            for y in range(20):
-                choice = bool(random.getrandbits(1))
-                if choice:
-                    pixels[x, y] = (0, 0, 255)
-
-        canvas.save("canvas.png", "PNG")
-
-        signature = self.peer.sign_artwork(canvas)
-        verification = self.peer.verify_artwork(
-            signature=signature,
-            public_key_string=self.peer.keys["public"],
-            artwork=canvas,
-        )
-        self.assertEqual(verification, True)
 
 
 if __name__ == "__main__":

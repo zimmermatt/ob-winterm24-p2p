@@ -6,9 +6,10 @@ ArtFragmentGenerator class allows us to create an instance of ArtFragment
 """
 
 import logging
+import random
 from random import randrange
 from collections import namedtuple
-from commission.artwork import Artwork, Constraint, Pixel
+from commission.artwork import Artwork, Pixel
 from commission.artfragment import ArtFragment
 from drawing.coordinates import Coordinates
 
@@ -25,10 +26,9 @@ def generate_fragment(artwork: Artwork, contributor: str):
     - contributor (str): Peer ID that created the ArtFragment.
     """
     subcanvas = generate_subcanvas(artwork.width, artwork.height)
-    constraint = artwork.constraint
 
-    pixels = generate_pixels(subcanvas, constraint)
-    fragment = ArtFragment(artwork, contributor, pixels)
+    pixels = generate_pixels(subcanvas)
+    fragment = ArtFragment(artwork.get_key(), contributor, pixels)
     return fragment
 
 
@@ -50,9 +50,9 @@ def generate_subcanvas(width: int, height: int):
     return subcanvas
 
 
-def generate_pixels(subcanvas: Subcanvas, constraint: Constraint):
+def generate_pixels(subcanvas: tuple[tuple[int, int], tuple[int, int]]):
     """
-    Generate a list of pixel info that adheres to coordinates, dimensions, constraints
+    Generate a list of pixel info that adheres to coordiantes, dimensions, constraints
 
     TODO:
     - implement address-based adherence
@@ -60,7 +60,11 @@ def generate_pixels(subcanvas: Subcanvas, constraint: Constraint):
     """
     coordinates = subcanvas.coordinates
     dimensions = subcanvas.dimensions
-    color_constraint = constraint.color
+    color_constraint = (
+        random.randint(0, 255),
+        random.randint(0, 255),
+        random.randint(0, 255),
+    )
 
     x_coordinate = coordinates.x
     y_coordinate = coordinates.y

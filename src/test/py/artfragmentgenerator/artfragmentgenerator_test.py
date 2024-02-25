@@ -48,15 +48,12 @@ class TestArtFragmentGenerator(unittest.TestCase):
         artwork = self.artwork
         subcanvas = generate_subcanvas(artwork.width, artwork.height)
 
-        pixels = generate_pixels(subcanvas, artwork.constraint)
-        color_constraint = artwork.constraint.color
+        pixels = generate_pixels(subcanvas)
 
         for pixel in pixels:
             coordinates = pixel.coordinates
-            color = pixel.color
             self.assertLess(coordinates.x, artwork.width)
             self.assertLess(coordinates.y, artwork.height)
-            self.assertEqual(color, color_constraint)
 
 
 if __name__ == "__main__":
