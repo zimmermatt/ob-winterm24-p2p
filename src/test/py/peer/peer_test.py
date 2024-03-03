@@ -8,10 +8,11 @@ from datetime import timedelta
 import logging
 import pickle
 import unittest
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import patch, call, MagicMock, AsyncMock
 from commission.artwork import Artwork
 from peer.peer import Peer
 from peer.ledger import Ledger
+from peer.inventory import Inventory
 
 
 class MockNode:
@@ -80,6 +81,9 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.peer.keys = {"public": "public_key1"}
         self.peer2.keys = {"public": "public_key2"}
 
+        self.peer.logger = MagicMock()
+        self.peer.logger.info = MagicMock()
+
     def test_initialization(self):
         """
         Test case to verify the initialization of the Peer class.
@@ -146,6 +150,28 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
 
         self.ledger.queue[0] = (self.peer, b"corrupted_hash")
         self.assertFalse(self.ledger.verify_integrity())
+
+    async def test_announce_trade(self):
+        """
+        Test the announce_trade method of the Peer class.
+        """
+
+        self.peer.inventory = Inventory()
+        artwork = Artwork(10, 10, timedelta(minutes=10), self.ledger)
+        artwork.key = "artwork_key"
+        self.peer.inventory.add_owned_artwork(artwork)
+        self.peer.node = self.mock_node
+        self.peer.logger.info.reset_mock()
+
+        await self.peer.announce_trade()
+
+        self.assertEqual(self.peer.logger.info.call_count, 2)
+        self.assertEqual(
+            self.peer.logger.info.call_args_list[0], call("Announcing trade")
+        )
+        self.assertEqual(
+            self.peer.logger.info.call_args_list[1], call("Trade announced")
+        )
 
 
 if __name__ == "__main__":

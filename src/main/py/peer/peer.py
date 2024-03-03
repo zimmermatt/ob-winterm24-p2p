@@ -85,7 +85,9 @@ class Peer:
             else:
                 self.logger.error("Commission failed to complete")
             self.inventory.add_owned_artwork(commission)
-            self.inventory.commission_canvases[commission.key].save("pics/canvas13.png", "PNG")
+            self.inventory.commission_canvases[commission.key].save(
+                "pics/canvas13.png", "PNG"
+            )
             self.inventory.remove_commission(commission)
         except TypeError:
             self.logger.info(commission)
@@ -165,6 +167,37 @@ class Peer:
         except TypeError:
             self.logger.error("Trade type is not pickleable")
 
+    # async def announce_trade(self, wait_time=timedelta(seconds=10)):
+    #     """
+    #     Announce a trade to the network.
+    #     """
+
+    #     self.logger.info("Announcing trade")
+    #     artwork = self.inventory.get_artwork_to_trade()
+    #     if not artwork:
+    #         self.logger.info("No artwork to trade")
+    #         return
+    #     offer_announcement = OfferAnnouncement(artwork)
+    #     announcement_key = utils.generate_random_sha1_hash()
+    #     self.inventory.add_pending_trade(announcement_key, offer_announcement)
+    #     asyncio.get_event_loop().call_later(
+    #         wait_time,
+    #         asyncio.create_task,
+    #         await self.handle_announcement_deadline(
+    #             announcement_key, offer_announcement
+    #         ),
+    #     )
+
+    #     try:
+    #         set_success = await self.node.set(
+    #             announcement_key, pickle.dumps(offer_announcement)
+    #         )
+    #         if set_success:
+    #             self.logger.info("Trade announced")
+    #         else:
+    #             self.logger.error("Trade failed to announce")
+    #     except TypeError:
+    #         self.logger.error("Trade type is not pickleable")
     async def announce_trade(self, wait_time=timedelta(seconds=10)):
         """
         Announce a trade to the network.
@@ -178,11 +211,14 @@ class Peer:
         offer_announcement = OfferAnnouncement(artwork)
         announcement_key = utils.generate_random_sha1_hash()
         self.inventory.add_pending_trade(announcement_key, offer_announcement)
+
         asyncio.get_event_loop().call_later(
-            wait_time,
-            asyncio.create_task,
-            self.handle_announcement_deadline(announcement_key, offer_announcement),
+            wait_time.total_seconds(),
+            lambda: asyncio.create_task(
+                self.handle_announcement_deadline(announcement_key, offer_announcement)
+            ),
         )
+
         try:
             set_success = await self.node.set(
                 announcement_key, pickle.dumps(offer_announcement)
