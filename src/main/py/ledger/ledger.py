@@ -34,7 +34,7 @@ class Ledger:
         new_hash = hashlib.sha256(peer.keys["public"].encode()).digest()
         combined_hash = previous_hash + new_hash
         self.top_of_stack = hashlib.sha256(combined_hash)
-        self.stack.append((peer, self.top_of_stack.digest()))
+        self.stack.append((peer.keys["public"], self.top_of_stack.digest()))
 
     def verify_integrity(self):
         """
@@ -45,8 +45,7 @@ class Ledger:
             previous_hash = self.stack[i - 1][1]
             current_hash = self.stack[i][1]
             expected_hash = hashlib.sha256(
-                previous_hash
-                + hashlib.sha256(self.stack[i][0].keys["public"].encode()).digest()
+                previous_hash + hashlib.sha256(self.stack[i][0].encode()).digest()
             ).digest()
 
             if current_hash != expected_hash:

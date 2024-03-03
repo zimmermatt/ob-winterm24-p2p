@@ -24,7 +24,7 @@ class TestLedger(unittest.TestCase):
         """
 
         self.ledger.add_owner(self.mock_peer1)
-        self.assertEqual(self.ledger.stack[-1][0], self.mock_peer1)
+        self.assertEqual(self.ledger.stack[-1][0], self.mock_peer1.keys["public"])
 
     def test_verify_integrity(self):
         """

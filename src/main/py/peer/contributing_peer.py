@@ -30,6 +30,9 @@ async def main():
         address = None
     peer = Peer(port_num, key_filename, address, kademlia)
     await peer.connect_to_network()
+    while True:
+        await asyncio.sleep(1)
+        peer.node.refresh_table()
 
 
 if __name__ == "__main__":

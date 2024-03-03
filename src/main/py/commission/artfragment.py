@@ -7,7 +7,6 @@ ArtFragment class allows us to instantiate a fragment for an Artwork instance
 
 import logging
 from dataclasses import dataclass
-from commission.artwork import Artwork
 from commission.artwork import Pixel
 
 
@@ -20,7 +19,7 @@ class ArtFragment:
     - pixels (set[Pixel]): set of pixels that fragment occupies
     """
 
-    artwork: Artwork
+    artwork_id: str
     contributor: str
     pixels: frozenset[Pixel]
 
