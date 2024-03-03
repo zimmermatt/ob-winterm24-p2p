@@ -13,6 +13,7 @@ from commission.artwork import Artwork
 from peer.peer import Peer
 from peer.ledger import Ledger
 from peer.inventory import Inventory
+# from trade.offer_announcement import OfferAnnouncement
 
 
 class MockNode:
@@ -74,8 +75,12 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.ledger = Ledger()
         self.artwork1 = Artwork(10, 10, timedelta(minutes=10), self.ledger)
         self.artwork2 = Artwork(10, 10, timedelta(minutes=10), self.ledger)
-        self.artwork1.key = "artwork_key_1"
-        self.artwork2.key = "artwork_key_2"
+
+        # TO DO: FIX THIS FOR TYPES
+        # self.artwork1.key = self.artwork1
+        # self.artwork2.key = self.artwork2
+        # END
+
         self.peer2 = Peer(
             8000, "src/test/py/resources/peer_test", "127.0.0.1:5000", self.mock_kdm
         )
@@ -90,9 +95,10 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.peer.inventory.add_owned_artwork(self.artwork1)
         self.peer.inventory.add_owned_artwork(self.artwork2)
 
-        # offer_announcement = OfferAnnouncement(artwork)
-        # announcement_key = utils.generate_random_sha1_hash()
-        # self.inventory.add_pending_trade(announcement_key, offer_announcement)
+        # TO DO: FIX THIS
+        # self.trade_key = self.artwork1.key
+        # self.trade_offer = OfferAnnouncement()
+        # END
 
     def test_initialization(self):
         """
@@ -180,6 +186,10 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             self.peer.logger.info.call_args_list[1], call("Trade announced")
         )
+
+    # TO DO: FIX trade_key
+    # async def test_send_trade_response(self, self.trade_key, self.trade_offer):
+    #     pass
 
 
 if __name__ == "__main__":
