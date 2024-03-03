@@ -74,6 +74,8 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.ledger = Ledger()
         self.artwork1 = Artwork(10, 10, timedelta(minutes=10), self.ledger)
         self.artwork2 = Artwork(10, 10, timedelta(minutes=10), self.ledger)
+        self.artwork1.key = "artwork_key_1"
+        self.artwork2.key = "artwork_key_2"
         self.peer2 = Peer(
             8000, "src/test/py/resources/peer_test", "127.0.0.1:5000", self.mock_kdm
         )
@@ -83,6 +85,14 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
 
         self.peer.logger = MagicMock()
         self.peer.logger.info = MagicMock()
+
+        self.peer.inventory = Inventory()
+        self.peer.inventory.add_owned_artwork(self.artwork1)
+        self.peer.inventory.add_owned_artwork(self.artwork2)
+
+        # offer_announcement = OfferAnnouncement(artwork)
+        # announcement_key = utils.generate_random_sha1_hash()
+        # self.inventory.add_pending_trade(announcement_key, offer_announcement)
 
     def test_initialization(self):
         """
@@ -156,14 +166,12 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         Test the announce_trade method of the Peer class.
         """
 
-        self.peer.inventory = Inventory()
-        artwork = Artwork(10, 10, timedelta(minutes=10), self.ledger)
-        artwork.key = "artwork_key"
-        self.peer.inventory.add_owned_artwork(artwork)
         self.peer.node = self.mock_node
         self.peer.logger.info.reset_mock()
 
         await self.peer.announce_trade()
+
+        self.assertEqual(len(self.peer.inventory.pending_trades), 1)
 
         self.assertEqual(self.peer.logger.info.call_count, 2)
         self.assertEqual(
