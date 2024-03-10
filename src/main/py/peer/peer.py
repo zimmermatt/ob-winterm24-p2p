@@ -257,10 +257,10 @@ class Peer:
             self.inventory.remove_pending_trade(trade_key)
             if response.trade_id in self.inventory.pending_trades:
                 self.inventory.remove_pending_trade(response.trade_id)
-            self.handle_accept_trade(response)
+            await self.handle_accept_trade(response)
             self.logger.info("Trade successful")
         else:
-            self.handle_reject_trade(response)
+            await self.handle_reject_trade(response)
 
     async def data_stored_callback(self, key, value):
         """

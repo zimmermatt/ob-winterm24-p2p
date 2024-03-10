@@ -13,7 +13,8 @@ from commission.artwork import Artwork
 from peer.peer import Peer
 from peer.ledger import Ledger
 from peer.inventory import Inventory
-# from trade.offer_announcement import OfferAnnouncement
+from trade.offer_announcement import OfferAnnouncement
+from trade.offer_response import OfferResponse
 
 
 class MockNode:
@@ -76,11 +77,6 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.artwork1 = Artwork(10, 10, timedelta(minutes=10), self.ledger)
         self.artwork2 = Artwork(10, 10, timedelta(minutes=10), self.ledger)
 
-        # TO DO: FIX THIS FOR TYPES
-        # self.artwork1.key = self.artwork1
-        # self.artwork2.key = self.artwork2
-        # END
-
         self.peer2 = Peer(
             8000, "src/test/py/resources/peer_test", "127.0.0.1:5000", self.mock_kdm
         )
@@ -95,10 +91,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.peer.inventory.add_owned_artwork(self.artwork1)
         self.peer.inventory.add_owned_artwork(self.artwork2)
 
-        # TO DO: FIX THIS
-        # self.trade_key = self.artwork1.key
-        # self.trade_offer = OfferAnnouncement()
-        # END
+        self.peer.inventory.remove_pending_trade = MagicMock()
 
     def test_initialization(self):
         """
@@ -187,9 +180,59 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             self.peer.logger.info.call_args_list[1], call("Trade announced")
         )
 
-    # TO DO: FIX trade_key
-    # async def test_send_trade_response(self, self.trade_key, self.trade_offer):
-    #     pass
+    async def test_send_trade_response(self):
+        """
+        Test case for the send_trade_response method of the Peer class.
+        """
+
+        self.peer.node = self.mock_node
+        trade_key = b"trade_key"
+        announcement = OfferAnnouncement(
+            originator_public_key="originator_public_key",
+            artwork_ledger_key="artwork_ledger_key",
+        )
+
+        await self.peer.send_trade_response(trade_key, announcement)
+
+        self.mock_node.set.assert_called_once()
+
+        _, response_value = self.mock_node.set.call_args[0]
+
+        response = pickle.loads(response_value)
+        self.assertIsInstance(response, OfferResponse)
+        self.assertEqual(response.trade_id, trade_key)
+
+        if isinstance(self.peer.inventory.owned_artworks, list):
+            self.assertEqual(
+                response.artwork_ledger_key, self.peer.inventory.owned_artworks[0].key
+            )
+        elif isinstance(self.peer.inventory.owned_artworks, dict):
+            valid_key = list(self.peer.inventory.owned_artworks.keys())[0]
+            self.assertEqual(
+                response.artwork_ledger_key,
+                self.peer.inventory.owned_artworks[valid_key].key,
+            )
+
+        self.assertEqual(response.originator_public_key, self.peer.keys["public"])
+
+    async def test_handle_trade_response(self):
+        """
+        Test case for the handle_trade_response method of the Peer class.
+        """
+        trade_key = b"trade_key"
+        response = OfferResponse(trade_key, "artwork_ledger_key", "public_key")
+
+        self.peer.inventory.pending_trades = {trade_key: "trade_value"}
+        with patch.object(self.peer.logger, "info") as mock_info:
+            await self.peer.handle_trade_response(trade_key, response)
+            self.peer.inventory.remove_pending_trade.assert_called_with(trade_key)
+            mock_info.assert_any_call(response)
+            mock_info.assert_any_call("Trade successful")
+
+        self.peer.inventory.pending_trades = {}
+        with patch.object(self.peer.logger, "info") as mock_info:
+            await self.peer.handle_trade_response(trade_key, response)
+            mock_info.assert_any_call(response)
 
 
 if __name__ == "__main__":

@@ -17,7 +17,17 @@ logging.basicConfig(
 # Placeholder for function to recover nodes recover_node(host, port)
 def recover_node(node_number, host, port):
     key_file = "node" + str(node_number)
-    subprocess.run(["python3", "-m", "peer.contributing_peer", port, key_file, host + ":50000", "&"])
+    subprocess.run(
+        [
+            "python3",
+            "-m",
+            "peer.contributing_peer",
+            port,
+            key_file,
+            host + ":50000",
+            "&",
+        ]
+    )
 
 
 # Function to check if a node is alive
