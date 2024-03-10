@@ -224,6 +224,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         with patch.object(self.peer.logger, "info") as mock_info:
             await self.peer.handle_trade_response(trade_key, response)
             mock_info.assert_any_call(response)
+            mock_info.assert_any_call("Trade unsuccessful")
 
 
 if __name__ == "__main__":

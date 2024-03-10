@@ -263,6 +263,7 @@ class Peer:
             self.logger.info("Trade successful")
         else:
             await self.handle_reject_trade(response)
+            self.logger.info("Trade unsuccessful")
 
     async def data_stored_callback(self, key, value):
         """
