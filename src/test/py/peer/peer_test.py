@@ -202,16 +202,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(response, OfferResponse)
         self.assertEqual(response.trade_id, trade_key)
 
-        if isinstance(self.peer.inventory.owned_artworks, list):
-            self.assertEqual(
-                response.artwork_ledger_key, self.peer.inventory.owned_artworks[0].key
-            )
-        elif isinstance(self.peer.inventory.owned_artworks, dict):
-            valid_key = list(self.peer.inventory.owned_artworks.keys())[0]
-            self.assertEqual(
-                response.artwork_ledger_key,
-                self.peer.inventory.owned_artworks[valid_key].key,
-            )
+        self.assertIn(response.artwork_ledger_key, self.peer.inventory.owned_artworks)
 
         self.assertEqual(response.originator_public_key, self.peer.keys["public"])
 

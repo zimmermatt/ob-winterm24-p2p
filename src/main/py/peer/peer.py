@@ -221,7 +221,9 @@ class Peer:
         offer_response = OfferResponse(
             trade_key, artwork_to_trade.key, self.keys["public"]
         )
+
         response_key = utils.generate_random_sha1_hash()
+
         self.inventory.add_pending_trade(
             trade_key,
             offer_response,
