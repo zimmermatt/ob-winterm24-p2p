@@ -85,7 +85,9 @@ class Peer:
             else:
                 self.logger.error("Commission failed to complete")
             self.inventory.add_owned_artwork(commission)
-            self.inventory.commission_canvases[commission.key].save("pics/canvas13.png", "PNG")
+            self.inventory.commission_canvases[commission.key].save(
+                "pics/canvas13.png", "PNG"
+            )
             self.inventory.remove_commission(commission)
         except TypeError:
             self.logger.info(commission)
@@ -121,7 +123,9 @@ class Peer:
             self.logger.info(commission)
             self.logger.error("Commission type is not pickleable")
 
-    async def commission_art_piece(self, width=None, height=None, wait_time=None) -> None:
+    async def commission_art_piece(
+        self, width=None, height=None, wait_time=None
+    ) -> None:
         """
         Get commission details from user input, create a commission, and send the request.
         """

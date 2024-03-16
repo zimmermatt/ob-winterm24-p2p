@@ -4,28 +4,28 @@ Module to manage our frontend
 
 This module allows us to create a GUI for our peer
 """
-
-import tkinter as tk
-from PIL import ImageTk
 import asyncio
 import logging
 import sys
+import tkinter as tk
+from PIL import ImageTk
 from server.network import NotifyingServer as kademlia
 from peer.peer import Peer
 
 
-class frontend:
-    """ Class to manage the frontend of the peer """
+class Frontend:
+    """Class to manage the frontend of the peer"""
+
     def __init__(self, peer):
-        """ Constructor for the frontend"""
+        """Constructor for the frontend"""
         self.peer = peer
 
     def reset_gui(self, window):
-        """ Reset the GUI to the commission page """
+        """Reset the GUI to the commission page"""
         # Clear the window
         for widget in window.winfo_children():
             widget.destroy()
-                # Create the width textbox
+            # Create the width textbox
         width_label = tk.Label(window, text="Width:")
         width_label.pack()
         width_entry = tk.Entry(window)
@@ -46,23 +46,27 @@ class frontend:
         button = tk.Button(
             window,
             text="Commission Art Piece",
-            command=lambda: self.commission_art_piece(width_entry.get(), height_entry.get(), wait_entry.get(), window)
+            command=lambda: self.commission_art_piece(
+                width_entry.get(), height_entry.get(), wait_entry.get(), window
+            ),
         )
         button.pack()
 
-
     def commission_art_piece(self, width_entry, height_entry, wait_entry, window):
-        """ Call commission art piece and display the result in the GUI"""
+        """Call commission art piece and display the result in the GUI"""
         width = float(width_entry)
         height = float(height_entry)
         wait_time = float(wait_entry)
-        commission = asyncio.create_task(self.peer.commission_art_piece(width, height, wait_time))
+        commission = asyncio.create_task(
+            self.peer.commission_art_piece(width, height, wait_time)
+        )
         # Clear the window
         for widget in window.winfo_children():
             widget.destroy()
         # Show a loading animation
         loading_label = tk.Label(window, text="Loading...")
         loading_label.pack()
+
         async def wait_and_complete(window):
             nonlocal commission
             commission = await commission
@@ -81,16 +85,14 @@ class frontend:
             image_label.pack()
             # Add button to reset the gui labelled "Back to commission page"
             reset_button = tk.Button(
-                window,
-                text="Reset GUI",
-                command=lambda: self.reset_gui(window)
+                window, text="Reset GUI", command=lambda: self.reset_gui(window)
             )
             reset_button.pack()
+
         asyncio.create_task(wait_and_complete(window))
 
-
     def create_gui(self):
-        """ Create the GUI for the peer"""
+        """Create the GUI for the peer"""
         # def run_tkinter_mainloop():
         window = tk.Tk()
         window.geometry("500x500")  # Set the window size to 500x500
@@ -116,12 +118,19 @@ class frontend:
         button = tk.Button(
             window,
             text="Commission Art Piece",
-            command=lambda: self.commission_art_piece(self.peer, width_entry.get(), height_entry.get(), wait_entry.get(), window)
+            command=lambda: self.commission_art_piece(
+                width_entry.get(),
+                height_entry.get(),
+                wait_entry.get(),
+                window,
+            ),
         )
         button.pack()
+
         def update():
             window.update()
             asyncio.get_event_loop().call_later(0.02, update)
+
         asyncio.get_event_loop().call_soon(update)
 
 
@@ -135,19 +144,18 @@ async def main():
     logging.basicConfig(
         format="%(asctime)s %(name)s %(levelname)s | %(message)s", level=logging.INFO
     )
-    key_filename = sys.argv[2]
-    port_num = int(sys.argv[1])
+    key_filename, port_num = sys.argv[2], int(sys.argv[1])
+    address = None
     if len(sys.argv) != 3:
         address = sys.argv[3]
-    else:
-        address = None
     peer = Peer(port_num, key_filename, address, kademlia)
     await peer.connect_to_network()
     # Create the GUI
-    peer_frontend = frontend(peer)
+    peer_frontend = Frontend(peer)
     peer_frontend.create_gui()
     while True:
         await asyncio.sleep(1)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
