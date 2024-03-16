@@ -121,16 +121,17 @@ class Peer:
             self.logger.info(commission)
             self.logger.error("Commission type is not pickleable")
 
-    async def commission_art_piece(self) -> None:
+    async def commission_art_piece(self, width=None, height=None, wait_time=None) -> None:
         """
         Get commission details from user input, create a commission, and send the request.
         """
 
         while True:
             try:
-                width = float(input("Enter commission width: "))
-                height = float(input("Enter commission height: "))
-                wait_time = float(input("Enter wait time in seconds: "))
+                if not (width and height and wait_time):
+                    width = float(input("Enter commission width: "))
+                    height = float(input("Enter commission height: "))
+                    wait_time = float(input("Enter wait time in seconds: "))
                 commission = Artwork(
                     width,
                     height,
@@ -275,16 +276,16 @@ class Peer:
                 and message_object.originator_public_key != self.keys["public"]
             ):
                 fragment = generate_fragment(message_object, self.keys["public"])
-                try:
-                    set_success = await self.node.set(
-                        utils.generate_random_sha1_hash(), pickle.dumps(fragment)
-                    )
-                    if set_success:
-                        self.logger.info("Fragment sent")
-                    else:
-                        self.logger.error("Fragment failed to send")
-                except TypeError:
-                    self.logger.error("Fragment type is not pickleable")
+                # try:
+                set_success = await self.node.set(
+                    utils.generate_random_sha1_hash(), pickle.dumps(fragment)
+                )
+                if set_success:
+                    self.logger.info("Fragment sent")
+                else:
+                    self.logger.error("Fragment failed to send")
+                # except TypeError:
+                #     self.logger.error("Fragment type is not pickleable")
         elif isinstance(message_object, ArtFragment):
             if message_object.artwork_id in self.inventory.commissions:
                 self.inventory.commissions[

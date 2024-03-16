@@ -3,7 +3,7 @@
 # Just a basic script to spin up listening servers on different ports in dynamic port range
 # Setting up variables
 PSTART=${1:-50000}
-PEND=${2:-50050}
+PEND=${2:-50049}
 PEER_FILE="peer_list.txt"
 IP="127.0.0.1"
 COUNT=0
