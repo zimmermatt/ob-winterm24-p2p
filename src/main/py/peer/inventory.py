@@ -6,8 +6,6 @@ The inventory class keeps track of our commissions, owned artworks, and artworks
 """
 import random
 from commission.artwork import Artwork
-from trade.offer_announcement import OfferAnnouncement
-from trade.offer_response import OfferResponse
 
 
 class Inventory:
@@ -51,10 +49,7 @@ class Inventory:
         - trade_offer (OfferAnnouncement | OfferResponse): The trade offer to add to the inventory.
         """
 
-        if isinstance(trade_offer, OfferResponse):
-            self.artworks_pending_trade.add(trade_offer.get_artwork_ledger_key())
-        elif isinstance(trade_offer, OfferAnnouncement):
-            self.artworks_pending_trade.add(trade_offer.artwork_ledger_key)
+        self.artworks_pending_trade.add(trade_offer.artwork_id)
         self.pending_trades[trade_key] = trade_offer
 
     def remove_commission(self, artwork: Artwork):

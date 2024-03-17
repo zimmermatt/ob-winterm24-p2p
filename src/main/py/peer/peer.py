@@ -183,9 +183,8 @@ class Peer:
 
         asyncio.get_event_loop().call_later(
             wait_time.total_seconds(),
-            lambda: asyncio.create_task(
-                self.handle_announcement_deadline(announcement_key, offer_announcement)
-            ),
+            asyncio.create_task,
+            self.handle_announcement_deadline(announcement_key, offer_announcement),
         )
 
         try:

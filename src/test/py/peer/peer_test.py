@@ -91,8 +91,6 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.peer.inventory.add_owned_artwork(self.artwork1)
         self.peer.inventory.add_owned_artwork(self.artwork2)
 
-        self.peer.inventory.remove_pending_trade = MagicMock()
-
     def test_initialization(self):
         """
         Test case to verify the initialization of the Peer class.
@@ -180,6 +178,12 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             self.peer.logger.info.call_args_list[1], call("Trade announced")
         )
 
+        with patch.object(self.peer.node, "set", side_effect=Exception("Set failed")):
+            with self.assertRaises(Exception) as context:
+                await self.peer.announce_trade()
+
+            self.assertEqual(str(context.exception), "Set failed")
+
     async def test_send_trade_response(self):
         """
         Test case for the send_trade_response method of the Peer class.
@@ -189,7 +193,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         trade_key = b"trade_key"
         announcement = OfferAnnouncement(
             originator_public_key="originator_public_key",
-            artwork_ledger_key="artwork_ledger_key",
+            artwork_id="artwork_id",
         )
 
         await self.peer.send_trade_response(trade_key, announcement)
@@ -202,28 +206,36 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(response, OfferResponse)
         self.assertEqual(response.trade_id, trade_key)
 
-        self.assertIn(response.artwork_ledger_key, self.peer.inventory.owned_artworks)
+        self.assertIn(response.artwork_id, self.peer.inventory.owned_artworks)
 
         self.assertEqual(response.originator_public_key, self.peer.keys["public"])
 
-    async def test_handle_trade_response(self):
+    async def test_handle_trade_response_success(self):
         """
-        Test case for the handle_trade_response method of the Peer class.
+        Test case for the handle_trade_response method of the Peer class for success case.
         """
+
         trade_key = b"trade_key"
-        response = OfferResponse(trade_key, "artwork_ledger_key", "public_key")
+        response = OfferResponse(trade_key, "artwork_id", "public_key")
 
         self.peer.inventory.pending_trades = {trade_key: "trade_value"}
         with patch.object(self.peer.logger, "info") as mock_info:
             await self.peer.handle_trade_response(trade_key, response)
-            self.peer.inventory.remove_pending_trade.assert_called_with(trade_key)
             mock_info.assert_any_call(response)
             mock_info.assert_any_call("Trade successful")
+            self.assertNotIn(trade_key, self.peer.inventory.pending_trades)
+
+    async def test_handle_trade_response_fails(self):
+        """
+        Test case for the handle_trade_response method of the Peer class for failure case.
+        """
+
+        trade_key = b"trade_key"
+        response = OfferResponse(trade_key, "artwork_id", "public_key")
 
         self.peer.inventory.pending_trades = {}
         with patch.object(self.peer.logger, "info") as mock_info:
             await self.peer.handle_trade_response(trade_key, response)
-            mock_info.assert_any_call(response)
             mock_info.assert_any_call("Trade unsuccessful")
 
 

@@ -14,7 +14,7 @@ class OfferResponse:
     def __init__(
         self,
         trade_id: str,
-        artwork_ledger_key: str,
+        artwork_id: str,
         originator_public_key: str = "",
     ):
         """
@@ -22,7 +22,7 @@ class OfferResponse:
         - trade_id (str): The trade id to respond to.
         """
         self.trade_id = trade_id
-        self.artwork_ledger_key = artwork_ledger_key
+        self.artwork_id = artwork_id
         self.originator_public_key = originator_public_key
 
     def get_trade_id(self):
@@ -39,9 +39,9 @@ class OfferResponse:
 
         return self.originator_public_key
 
-    def get_artwork_ledger_key(self):
+    def get_artwork_id(self):
         """
         Returns the artwork ledger key to respond to.
         """
 
-        return self.artwork_ledger_key
+        return self.artwork_id
