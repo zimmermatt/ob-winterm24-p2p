@@ -15,15 +15,18 @@ clean-src:
 pylint:
 	pylint --recursive=y src/*/py
 
-ruff:
-	ruff format
-	ruff .
+ruff-check:
+	ruff format --check .
+	ruff check .
+
+ruff-format:
+	ruff format .
 
 run:
 	export PYTHONPATH=src/main/py; \
 		python3 -m peer.peer 50000 "src/test/py/resources/peer_test" "0.0.0.0:50000"
 
-test: ruff pylint
+test: ruff-check pylint
 	export PYTHONPATH=src/main/py; \
 	    coverage run -m unittest discover --pattern "*_test.py" \
 		  --start-directory src/test/py \
