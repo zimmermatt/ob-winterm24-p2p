@@ -68,6 +68,10 @@ else
         source venv/Scripts/activate
     fi
 
+    if [ "$(expr substr $(uname -s) 1 5)" = "Linux" ]; then
+      apt-get install python3-tk
+    fi
+
     if [ -f requirements.txt ]; then
       pip install -r requirements.txt
     fi

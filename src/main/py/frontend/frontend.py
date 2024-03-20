@@ -7,7 +7,7 @@ This module allows us to create a GUI for our peer
 import asyncio
 import logging
 import sys
-import tkinter as tk
+import tk
 from PIL import ImageTk
 from server.network import NotifyingServer as kademlia
 from peer.peer import Peer
