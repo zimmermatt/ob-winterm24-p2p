@@ -1,5 +1,5 @@
 """
-Module to manage a ledger for an Artwork.
+Module to manage artwork ledger functionality.
 
 The Ledger class allows us to maintain a history of ownership for an Artwork.
 """

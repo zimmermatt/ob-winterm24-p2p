@@ -2,7 +2,7 @@
 """
 Module to manage peer inventory functionality.
 
-The inventory class keeps track of our commissions, owned artworks, and artworks pending trade.
+The Inventory class keeps track of our commissions, owned artworks, and artworks pending trade.
 """
 import random
 from commission.artwork import Artwork
@@ -11,7 +11,7 @@ from commission.artwork import Artwork
 class Inventory:
     """Class to manage Peer artwork inventory"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initializes an instance of the Inventory class"""
         self.commissions = {}
         self.owned_artworks = {}

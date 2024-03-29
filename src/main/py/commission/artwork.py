@@ -10,7 +10,7 @@ from collections import namedtuple
 from datetime import datetime, timedelta
 from drawing.coordinates import Coordinates
 from drawing.color import Color
-from peer.ledger import Ledger
+from ledger.ledger import Ledger
 import utils
 
 Pixel = namedtuple("Pixel", ["coordinates", "color"])

@@ -17,7 +17,7 @@ from server.network import NotifyingServer as kademlia
 from commission.artfragment import ArtFragment
 from commission.artwork import Artwork
 from commission.artfragmentgenerator import generate_fragment
-from peer.ledger import Ledger
+from ledger.ledger import Ledger
 from peer.inventory import Inventory
 from trade.offer_response import OfferResponse
 from trade.offer_announcement import OfferAnnouncement
