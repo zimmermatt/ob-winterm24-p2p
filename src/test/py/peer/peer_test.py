@@ -263,6 +263,16 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         await self.peer.handle_trade_response(self.trade_key, self.response)
         self.peer.logger.info.assert_any_call("Trade unsuccessful")
 
+    def test_get_palette(self):
+        """
+        Test if the palette generated is valid.
+        """
+        palette = self.peer2.get_palette(self.peer.keys['public'], 5)
+
+        self.assertEqual(len(palette), 5)
+        for color in palette:
+            for channel in color:
+                self.assertLessEqual(channel, 255)
 
 if __name__ == "__main__":
     # Create an event loop
