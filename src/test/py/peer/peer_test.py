@@ -147,6 +147,16 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.ledger.queue[0] = (self.peer, b"corrupted_hash")
         self.assertFalse(self.ledger.verify_integrity())
 
+    def test_get_palette(self):
+        """
+        Test if the palette generated is valid.
+        """
+        palette = self.peer2.get_palette(self.peer.keys['public'], 5)
+
+        self.assertEqual(len(palette), 5)
+        for color in palette:
+            for channel in color:
+                self.assertLessEqual(channel, 255)
 
 if __name__ == "__main__":
     # Create an event loop
