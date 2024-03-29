@@ -157,6 +157,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         for color in palette:
             for channel in color:
                 self.assertLessEqual(channel, 255)
+                self.assertGreaterEqual(channel, 0)
 
 if __name__ == "__main__":
     # Create an event loop
