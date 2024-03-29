@@ -6,6 +6,7 @@ Peer class allows us to join the network, commission artwork, and generate fragm
 """
 import time
 import asyncio
+import random
 from datetime import timedelta
 import hashlib
 import ipaddress
@@ -343,6 +344,36 @@ class Peer:
             return
         return add
 
+    def get_palette(self, originator_id: str, palette_limit: int) -> list:
+        """
+        Get self's palette corresponding to palette_limit and distance from originator
+
+        Args:
+            originator_id (str): originator's id
+            palette_limit (int): the number of colors in palette
+
+        Returns:
+            list: a list of colors in the palette
+        """
+
+        # create an array of palette_limit*3 color channels
+        distance_to_originator = self.node.node_id ^ originator_id
+        random.seed(distance_to_originator)
+        channels = random.sample(range(0,256), palette_limit*3)
+
+        # create a palette array of colors, each color being a 3-element tuple
+        start = 0
+        end = 3
+        n = len(channels)
+        palette = []
+
+        while end < n:
+            color = channels[start:end]
+            start = end
+            end += 3
+            palette.append(color)
+
+        return palette
 
 async def main():
     """Main function
