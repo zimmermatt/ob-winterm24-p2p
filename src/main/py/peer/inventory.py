@@ -2,7 +2,7 @@
 """
 Module to manage peer inventory functionality.
 
-The inventory class keeps track of our commissions, owned artworks, and artworks pending trade.
+The Inventory class keeps track of our commissions, owned artworks, and artworks pending trade.
 """
 import random
 from commission.artwork import Artwork
@@ -11,7 +11,7 @@ from commission.artwork import Artwork
 class Inventory:
     """Class to manage Peer artwork inventory"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initializes an instance of the Inventory class"""
         self.commissions = {}
         self.owned_artworks = {}
@@ -27,6 +27,7 @@ class Inventory:
         Params:
         - artwork (Artwork): The artwork to add to the inventory.
         """
+
         self.commissions[artwork.key] = artwork
 
     def add_owned_artwork(self, artwork: Artwork):
@@ -36,6 +37,7 @@ class Inventory:
         Params:
         - artwork (Artwork): The artwork to add to the inventory.
         """
+
         self.owned_artworks[artwork.key] = artwork
 
     def add_pending_trade(self, trade_key, trade_offer):
@@ -46,7 +48,8 @@ class Inventory:
         - trade_key (bytes): The key of the artwork to add to the inventory.
         - trade_offer (OfferAnnouncement | OfferResponse): The trade offer to add to the inventory.
         """
-        self.artworks_pending_trade.add(trade_offer.artwork_ledger_key)
+
+        self.artworks_pending_trade.add(trade_offer.artwork_id)
         self.pending_trades[trade_key] = trade_offer
 
     def remove_commission(self, artwork: Artwork):
@@ -56,6 +59,7 @@ class Inventory:
         Params:
         - artwork (Artwork): The artwork to remove from the inventory.
         """
+
         if artwork.key in self.commissions:
             del self.commissions[artwork.key]
 
@@ -66,6 +70,7 @@ class Inventory:
         Params:
         - artwork (Artwork): The artwork to remove from the inventory.
         """
+
         if artwork.key in self.owned_artworks:
             del self.owned_artworks[artwork.key]
 
@@ -76,6 +81,7 @@ class Inventory:
         Params:
         - artwork (Artwork): The artwork to remove from the inventory.
         """
+
         if trade_key in self.pending_trades:
             del self.pending_trades[trade_key]
 
@@ -86,6 +92,7 @@ class Inventory:
         Params:
         - key (bytes): The key of the commission to get from the inventory.
         """
+
         if key in self.commissions:
             return self.commissions[key]
         raise KeyError(f"No commission found for key: {key}")
@@ -97,6 +104,7 @@ class Inventory:
         Params:
         - key (bytes): The key of the owned artwork to get from the inventory.
         """
+
         if key in self.owned_artworks:
             return self.owned_artworks[key]
         raise KeyError(f"No owned artwork found for key: {key}")
@@ -108,12 +116,14 @@ class Inventory:
         Params:
         - key (bytes): The key of the artwork to check.
         """
+
         return key in self.owned_artworks
 
     def get_artwork_to_trade(self):
         """
         Gets a random artwork to trade from the inventory.
         """
+
         available_artworks = [
             artwork
             for artwork in self.owned_artworks.values()
