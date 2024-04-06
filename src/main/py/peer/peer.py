@@ -265,6 +265,9 @@ class Peer:
             self.handle_reject_trade(response)
 
     async def contribute_to_artwork(self, message_object: Artwork):
+        """
+        Contribute to an artwork by generating a fragment and sending it to the network.
+        """
         fragment = generate_fragment(message_object, self.keys["public"])
         try:
             set_success = await self.node.set(
@@ -295,7 +298,8 @@ class Peer:
                 and message_object.originator_public_key != self.keys["public"]
             ):
                 self.commission_requests_recieved.append(message_object)
-                if self.gui_callback: self.gui_callback()
+                if callable(self.gui_callback):
+                    self.gui_callback()  # pylint: disable=not-callable
                 self.contribute_to_artwork(message_object)
         elif isinstance(message_object, ArtFragment):
             if message_object.artwork_id in self.inventory.commissions:

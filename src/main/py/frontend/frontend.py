@@ -143,7 +143,7 @@ class Frontend:
             ),
         )
         button.pack()
-        self.peer.gui_callback = self.update_commissions(window)
+        self.peer.gui_callback = lambda: self.update_commissions(window)
 
         def update():
             window.update()
