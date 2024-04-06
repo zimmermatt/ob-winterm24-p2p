@@ -66,6 +66,8 @@ class Peer:
             self.keys["private"] = private_key_file.read()
         self.kdm = kdm
         self.node = None
+        self.commission_requests_recieved = []
+        self.gui_callback = None
         self.inventory = Inventory()
         self.ledger = Ledger()
 
@@ -164,9 +166,9 @@ class Peer:
                 announcement_key, pickle.dumps(offer_announcement)
             )
             if set_success:
-                self.logger.info("Trade announced")
+                self.logger.info("Trade deadline announced")
             else:
-                self.logger.error("Trade failed to announce")
+                self.logger.error("Failed to announce trade deadline")
         except TypeError:
             self.logger.error("Trade type is not pickleable")
 
@@ -262,6 +264,19 @@ class Peer:
         else:
             self.handle_reject_trade(response)
 
+    async def contribute_to_artwork(self, message_object: Artwork):
+        fragment = generate_fragment(message_object, self.keys["public"])
+        try:
+            set_success = await self.node.set(
+                utils.generate_random_sha1_hash(), pickle.dumps(fragment)
+            )
+            if set_success:
+                self.logger.info("Fragment sent")
+            else:
+                self.logger.error("Fragment failed to send")
+        except TypeError:
+            self.logger.error("Fragment type is not pickleable")
+
     async def data_stored_callback(self, key, value):
         """
         Callback function for when data is stored.
@@ -279,17 +294,9 @@ class Peer:
                 not message_object.commission_complete
                 and message_object.originator_public_key != self.keys["public"]
             ):
-                fragment = generate_fragment(message_object, self.keys["public"])
-                # try:
-                set_success = await self.node.set(
-                    utils.generate_random_sha1_hash(), pickle.dumps(fragment)
-                )
-                if set_success:
-                    self.logger.info("Fragment sent")
-                else:
-                    self.logger.error("Fragment failed to send")
-                # except TypeError:
-                #     self.logger.error("Fragment type is not pickleable")
+                self.commission_requests_recieved.append(message_object)
+                if self.gui_callback: self.gui_callback()
+                self.contribute_to_artwork(message_object)
         elif isinstance(message_object, ArtFragment):
             if message_object.artwork_id in self.inventory.commissions:
                 self.inventory.commissions[

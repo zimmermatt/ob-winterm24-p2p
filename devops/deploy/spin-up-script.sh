@@ -53,7 +53,7 @@ do
     echo "${COUNT},${port},${private_key},${public_key}" >> $PEER_FILE
 
     # Create 2 commissioning peer, while the rest as listening peer doing the commission
-    if [ ${COUNT} -le 0 ]
+    if [ ${COUNT} -le 3 ]
     then
         export PYTHONPATH="src/main/py";python -m peer.peer ${port} "keys/node$COUNT" "${IP}:${PSTART}" < devops/deploy/commission_input.txt &
     else

@@ -7,7 +7,7 @@ This module allows us to create a GUI for our peer
 import asyncio
 import logging
 import sys
-import tk
+import tkinter as tk
 from PIL import ImageTk
 from server.network import NotifyingServer as kademlia
 from peer.peer import Peer
@@ -19,6 +19,23 @@ class Frontend:
     def __init__(self, peer):
         """Constructor for the frontend"""
         self.peer = peer
+
+    def update_commissions(self, window):
+        """Update the commission requests in the GUI"""
+        # Clear the window
+        for widget in window.winfo_children():
+            widget.destroy()
+        # Get the commission requests from the peer
+        commissions = self.peer.commission_requests_recieved
+        # Create a label for each commission request
+        for commission in commissions:
+            commission_label = tk.Label(window, text=commission)
+            commission_label.pack()
+        # Add button to reset the gui labelled "Back to commission page"
+        reset_button = tk.Button(
+            window, text="Reset GUI", command=lambda: self.reset_gui(window)
+        )
+        reset_button.pack()
 
     def reset_gui(self, window):
         """Reset the GUI to the commission page"""
@@ -126,6 +143,7 @@ class Frontend:
             ),
         )
         button.pack()
+        self.peer.gui_callback = self.update_commissions(window)
 
         def update():
             window.update()
