@@ -16,7 +16,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Download tkinter
-      run: apt-get install python3-tk
+      run: sudo apt-get install -y python3-tk
 
     - name: Set up python environment
       run: source set-up-python-venv.sh -d
