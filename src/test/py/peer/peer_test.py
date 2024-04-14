@@ -98,7 +98,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         await self.peer.connect_to_network()
         self.peer.node.bootstrap.assert_called_once()
 
-    @patch("builtins.input", side_effect=["10", "20", "10"])
+    @patch("builtins.input", side_effect=["10", "20", "5", "10"])
     async def test_commission_art_piece(self, mock_input):
         """
         Test case for the commission_art_piece method of the Peer class.
@@ -121,6 +121,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             )
             self.assertEqual(commission.width, 10)
             self.assertEqual(commission.height, 20)
+            self.assertEqual(commission.constraint.palette_limit, 5)
             self.assertLessEqual(commission.wait_time, timedelta(seconds=10))
             # Check that send_deadline_reached was called, which in turn calls our node's set method
             await self.deadline_task
@@ -147,17 +148,8 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.ledger.queue[0] = (self.peer, b"corrupted_hash")
         self.assertFalse(self.ledger.verify_integrity())
 
-    def test_get_palette(self):
-        """
-        Test if the palette generated is valid.
-        """
-        palette = self.peer2.get_palette(self.peer.keys['public'], 5)
+    # def test_commission_with_palette_limit:
 
-        self.assertEqual(len(palette), 5)
-        for color in palette:
-            for channel in color:
-                self.assertLessEqual(channel, 255)
-                self.assertGreaterEqual(channel, 0)
 
 if __name__ == "__main__":
     # Create an event loop

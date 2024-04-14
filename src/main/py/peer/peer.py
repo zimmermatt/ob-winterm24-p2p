@@ -6,7 +6,6 @@ Peer class allows us to join the network, commission artwork, and generate fragm
 """
 import time
 import asyncio
-import random
 from datetime import timedelta
 import hashlib
 import ipaddress
@@ -22,6 +21,7 @@ from peer.ledger import Ledger
 from peer.inventory import Inventory
 from trade.offer_response import OfferResponse
 from trade.offer_announcement import OfferAnnouncement
+from drawing.drawing import Constraint
 import utils
 
 
@@ -133,13 +133,17 @@ class Peer:
             try:
                 width = float(input("Enter commission width: "))
                 height = float(input("Enter commission height: "))
+                palette_limit = float(input("Enter palette limit: "))
                 wait_time = float(input("Enter wait time in seconds: "))
+                constraint = Constraint(palette_limit, "any")
                 commission = Artwork(
                     width,
                     height,
                     timedelta(seconds=wait_time),
                     self.ledger,
+                    constraint=constraint,
                     originator_public_key=self.keys["public"],
+                    originator_long_id=self.node.node.long_id,
                 )
                 await self.send_commission_request(commission)
                 self.inventory.add_commission(commission)
@@ -277,7 +281,12 @@ class Peer:
                 not message_object.commission_complete
                 and message_object.originator_public_key != self.keys["public"]
             ):
-                fragment = generate_fragment(message_object, self.keys["public"])
+                fragment = generate_fragment(
+                    message_object,
+                    message_object.originator_long_id,
+                    self.keys["public"],
+                    self.node.node.long_id,
+                )
                 try:
                     set_success = await self.node.set(
                         utils.generate_random_sha1_hash(), pickle.dumps(fragment)
@@ -344,36 +353,6 @@ class Peer:
             return
         return add
 
-    def get_palette(self, originator_id: str, palette_limit: int) -> list:
-        """
-        Get self's palette corresponding to palette_limit and distance from originator
-
-        Args:
-            originator_id (str): originator's id
-            palette_limit (int): the number of colors in palette
-
-        Returns:
-            list: a list of colors in the palette
-        """
-
-        # create an array of palette_limit*3 color channels
-        distance_to_originator = self.node.node_id ^ originator_id
-        random.seed(distance_to_originator)
-        channels = random.sample(range(0,256), palette_limit*3)
-
-        # create a palette array of colors, each color being a 3-element tuple
-        start = 0
-        end = 3
-        n = len(channels)
-        palette = []
-
-        while end < n:
-            color = channels[start:end]
-            start = end
-            end += 3
-            palette.append(color)
-
-        return palette
 
 async def main():
     """Main function

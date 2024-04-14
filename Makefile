@@ -24,7 +24,7 @@ ruff-format:
 
 run:
 	export PYTHONPATH=src/main/py; \
-		python3 -m peer.peer 50000 "src/test/py/resources/peer_test" "0.0.0.0:50000"
+		python -m peer.peer 50000 "src/test/py/resources/peer_test" "0.0.0.0:50000"
 
 test: ruff-check pylint
 	export PYTHONPATH=src/main/py; \
