@@ -9,9 +9,9 @@ import logging
 import random
 from random import randrange
 from collections import namedtuple
-from commission.artwork import Artwork, Pixel
+from commission.artwork import Artwork
 from commission.artfragment import ArtFragment
-from drawing.coordinates import Coordinates
+from drawing.drawing import Coordinates, Pixel, Constraint, Color
 
 Subcanvas = namedtuple("SubCanvas", ["coordinates", "dimensions"])
 Subcanvas.__annotations__ = {"coordinates": Coordinates, "dimensions": tuple[int, int]}
@@ -19,16 +19,26 @@ Subcanvas.__annotations__ = {"coordinates": Coordinates, "dimensions": tuple[int
 logger = logging.getLogger("ArtFragmentGenerator")
 
 
-def generate_fragment(artwork: Artwork, contributor: str):
+def generate_fragment(
+    artwork: Artwork,
+    originator_long_id: int,
+    contributor_id: str,
+    contributor_long_id: int,
+):
     """
     Generates an ArtFragment instance
     - artwork (Artwork): Artwork that the ArtFragment is intended for.
-    - contributor (str): Peer ID that created the ArtFragment.
+    - originator_long_id (int): Originator id who commissioned the artwork.
+    - contributor_id (int): Peer id that created the ArtFragment.
+    - contributor_long_id (int): Peer long id that created the ArtFragment.
     """
+    constraint = artwork.constraint
     subcanvas = generate_subcanvas(artwork.width, artwork.height)
 
-    pixels = generate_pixels(subcanvas)
-    fragment = ArtFragment(artwork.get_key(), contributor, pixels)
+    pixels = generate_pixels(
+        originator_long_id, contributor_long_id, subcanvas, constraint
+    )
+    fragment = ArtFragment(artwork.get_key(), contributor_id, pixels)
     return fragment
 
 
@@ -39,7 +49,7 @@ def generate_subcanvas(width: int, height: int):
     x_coordinate = randrange(0, width)
     y_coordinate = randrange(0, height)
     coordinates = Coordinates(x_coordinate, y_coordinate)
-    bounds = coordinates.create_bounds(width, height)
+    bounds = (1 + width - coordinates.x, 1 + height - coordinates.y)
 
     subcanvas_width = randrange(1, bounds[0])
     subcanvas_height = randrange(1, bounds[1])
@@ -50,27 +60,39 @@ def generate_subcanvas(width: int, height: int):
     return subcanvas
 
 
-def generate_pixels(subcanvas: tuple[tuple[int, int], tuple[int, int]]):
+def generate_pixels(
+    originator_long_id: int,
+    contributor_long_id: int,
+    subcanvas: Subcanvas,
+    constraint: Constraint = None,
+):
     """
-    Generate a list of pixel info that adheres to coordiantes, dimensions, constraints
+    Generate a list of pixel info that adheres to coordinates, dimensions, constraints
 
     TODO:
-    - implement address-based adherence
     - implement line type adherence
     """
-    coordinates = subcanvas.coordinates
-    dimensions = subcanvas.dimensions
-    color_constraint = (
-        random.randint(0, 255),
-        random.randint(0, 255),
-        random.randint(0, 255),
-    )
 
-    x_coordinate = coordinates.x
-    y_coordinate = coordinates.y
+    # if constraint, generate pixels that adhere to it
+    if constraint is not None:
+        palette = get_palette(
+            originator_long_id, contributor_long_id, constraint.palette_limit
+        )
+    # random constraint of 1 color if no constraint
+    else:
+        palette = [
+            Color(
+                random.randint(0, 255),
+                random.randint(0, 255),
+                random.randint(0, 255),
+            )
+        ]
 
-    width = dimensions[0]
-    height = dimensions[1]
+    x_coordinate = subcanvas.coordinates.x
+    y_coordinate = subcanvas.coordinates.y
+
+    width = subcanvas.dimensions[0]
+    height = subcanvas.dimensions[1]
 
     # generate the set of pixels to occupy
     num_pixels = randrange(0, width * height)
@@ -82,9 +104,45 @@ def generate_pixels(subcanvas: tuple[tuple[int, int], tuple[int, int]]):
         coordinates = Coordinates(
             randrange(x_coordinate, x_bound), randrange(y_coordinate, y_bound)
         )
-
-        pixel = Pixel(coordinates, color_constraint)
+        # randomly pick a color from the palette
+        pixel = Pixel(coordinates, random.choice(palette))
         set_pixels.add(pixel)
         num_pixels -= 1
 
     return set_pixels
+
+
+def get_palette(
+    originator_long_id: int, contributor_long_id: int, palette_limit: int
+) -> list:
+    """
+    Get palette corresponding to palette_limit and distance from originator to contributor
+
+    Args:
+        originator_long_id (int): originator's long id
+        contributor_long_id (int): contributor's long id
+        palette_limit (int): the number of colors in palette
+
+    Returns:
+        list: a list of colors in the palette
+    """
+
+    distance = originator_long_id ^ contributor_long_id
+    random.seed(distance)
+
+    # Create an array of palette_limit*3 color channels
+    channels = random.sample(range(0, 256), palette_limit * 3)
+
+    # create a palette array of colors, each color being a 3-element tuple
+    start = 0
+    end = 3
+    n = len(channels)
+    palette = []
+
+    while end <= n:
+        color = Color(*channels[start:end])
+        start = end
+        end += 3
+        palette.append(color)
+
+    return palette

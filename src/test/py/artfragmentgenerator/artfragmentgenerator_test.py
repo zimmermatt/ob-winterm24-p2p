@@ -9,8 +9,7 @@ from unittest.mock import Mock
 from datetime import timedelta
 from commission.artfragmentgenerator import generate_subcanvas, generate_pixels
 from commission.artwork import Artwork
-from commission.artwork import Constraint
-from drawing.color import Color
+from drawing.drawing import Color, Constraint
 
 
 class TestArtFragmentGenerator(unittest.TestCase):
@@ -41,14 +40,29 @@ class TestArtFragmentGenerator(unittest.TestCase):
         self.assertLessEqual(subcanvas_width, width_bound)
         self.assertLessEqual(subcanvas_height, height_bound)
 
-    def test_generate_pixels(self):
+    def test_generate_pixels_random_constraint(self):
         """
         Test the generate_pixel method of ArtFragmentGenerator for coordinate, color adherence
         """
         artwork = self.artwork
         subcanvas = generate_subcanvas(artwork.width, artwork.height)
 
-        pixels = generate_pixels(subcanvas)
+        pixels = generate_pixels(1, 2, subcanvas)
+
+        for pixel in pixels:
+            coordinates = pixel.coordinates
+            self.assertLess(coordinates.x, artwork.width)
+            self.assertLess(coordinates.y, artwork.height)
+
+    def test_generate_pixels_defined_constraint(self):
+        """
+        Test the generate_pixel method of ArtFragmentGenerator for coordinate, color adherence
+        """
+        artwork = self.artwork
+        subcanvas = generate_subcanvas(artwork.width, artwork.height)
+        constraint = Constraint(5, "any")
+
+        pixels = generate_pixels(1, 2, subcanvas, constraint)
 
         for pixel in pixels:
             coordinates = pixel.coordinates
