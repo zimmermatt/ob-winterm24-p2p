@@ -338,8 +338,8 @@ class Peer:
         pixels = canvas.load()
 
         for pixel in fragment.pixels:
-            # Making them black for now
             pixels[pixel.coordinates.x, pixel.coordinates.y] = pixel.color
+
         return canvas
 
     async def create_new_ledger_entry(self) -> Ledger:

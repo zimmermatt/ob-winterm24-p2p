@@ -4,6 +4,7 @@ Test Module for the Peer class
 """
 
 import asyncio
+from collections import namedtuple
 from datetime import timedelta
 import logging
 import pickle
@@ -12,6 +13,10 @@ from unittest.mock import patch, MagicMock, AsyncMock
 from commission.artwork import Artwork
 from peer.peer import Peer
 from peer.ledger import Ledger
+
+MockChildNode = namedtuple(
+    "MockChildNode", ["long_id"], defaults=(int(hex(12345), 16),) * 1
+)
 
 
 class MockNode:
@@ -22,6 +27,7 @@ class MockNode:
     def __init__(self):
         """Initializes an instance of the MockNode class."""
         self.data_store = {}
+        self.node = MockChildNode()
 
     async def set(self, key, value):
         """Stores a value based on the key."""
