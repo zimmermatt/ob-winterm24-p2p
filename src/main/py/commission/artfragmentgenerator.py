@@ -24,13 +24,17 @@ def generate_fragment(
     originator_long_id: int,
     contributor_id: str,
     contributor_long_id: int,
-):
-    """
-    Generates an ArtFragment instance
-    - artwork (Artwork): Artwork that the ArtFragment is intended for.
-    - originator_long_id (int): Originator id who commissioned the artwork.
-    - contributor_id (int): Peer id that created the ArtFragment.
-    - contributor_long_id (int): Peer long id that created the ArtFragment.
+) -> ArtFragment:
+    """Generates an ArtFragment instance
+
+    Args:
+        artwork (Artwork): Artwork that the ArtFragment is intended for.
+        originator_long_id (int): Originator id who commissioned the artwork.
+        contributor_id (int): Peer id that created the ArtFragment.
+        contributor_long_id (int): Peer long id that created the ArtFragment.
+
+    Returns:
+        ArtFragment: art fragment that adheres to artwork's constraint.
     """
     constraint = artwork.constraint
     subcanvas = generate_subcanvas(artwork.width, artwork.height)
@@ -42,9 +46,15 @@ def generate_fragment(
     return fragment
 
 
-def generate_subcanvas(width: int, height: int):
-    """
-    Generates starting (x,y) coordinates with width and height adhering to artwork
+def generate_subcanvas(width: int, height: int) -> Subcanvas:
+    """Generates starting (x,y) coordinates with width and height adhering to artwork
+
+    Args:
+        width (int): artwork's width.
+        height (int): artwork's height.
+
+    Returns:
+        Subcanvas: a subcanvas that is within the artwork's width and height.
     """
     x_coordinate = randrange(0, width)
     y_coordinate = randrange(0, height)
@@ -65,15 +75,23 @@ def generate_pixels(
     contributor_long_id: int,
     subcanvas: Subcanvas,
     constraint: Constraint = None,
-):
-    """
-    Generate a list of pixel info that adheres to coordinates, dimensions, constraints
+) -> set:
+    """Generate a list of pixel info that adheres to subcanvas and artwork's constraints.
 
     TODO:
     - implement line type adherence
+
+    Args:
+        originator_long_id (int): the artwork's originator long id.
+        contributor_long_id (int): the contributor's long id.
+        subcanvas (Subcanvas): the subcanvas that the contributor will draw on.
+        constraint (Constraint, optional): _description_. Defaults to None.
+
+    Returns:
+        set: a set of pixels with coordinates and colors adhering to subcanvas and constraints.
     """
 
-    # if constraint, generate pixels that adhere to it
+    # if there is a constraint, generate pixels that adhere to it
     if constraint is not None:
         palette = get_palette(
             originator_long_id, contributor_long_id, constraint.palette_limit
