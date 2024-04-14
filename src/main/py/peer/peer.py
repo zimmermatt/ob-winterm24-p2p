@@ -185,11 +185,13 @@ class Peer:
         offer_announcement = OfferAnnouncement(artwork)
         announcement_key = utils.generate_random_sha1_hash()
         self.inventory.add_pending_trade(announcement_key, offer_announcement)
+
         asyncio.get_event_loop().call_later(
-            wait_time,
+            wait_time.total_seconds(),
             asyncio.create_task,
             self.handle_announcement_deadline(announcement_key, offer_announcement),
         )
+
         try:
             set_success = await self.node.set(
                 announcement_key, pickle.dumps(offer_announcement)
@@ -223,7 +225,9 @@ class Peer:
         offer_response = OfferResponse(
             trade_key, artwork_to_trade.key, self.keys["public"]
         )
+
         response_key = utils.generate_random_sha1_hash()
+
         self.inventory.add_pending_trade(
             trade_key,
             offer_response,
@@ -259,10 +263,11 @@ class Peer:
             self.inventory.remove_pending_trade(trade_key)
             if response.trade_id in self.inventory.pending_trades:
                 self.inventory.remove_pending_trade(response.trade_id)
-            self.handle_accept_trade(response)
+            await self.handle_accept_trade(response)
             self.logger.info("Trade successful")
         else:
-            self.handle_reject_trade(response)
+            await self.handle_reject_trade(response)
+            self.logger.info("Trade unsuccessful")
 
     async def data_stored_callback(self, key, value):
         """
