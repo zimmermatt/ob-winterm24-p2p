@@ -30,3 +30,14 @@ test: ruff pylint
 		  --top-level-directory .
 	coverage report
 	coverage html
+
+container:
+	podman build -t myapp .
+	podman run --rm -i myapp < input.txt
+
+container-test: ruff pylint
+	podman build -t myapp .
+	podman run --rm -i myapp < input.txt sh -c '\
+	coverage run -m unittest discover --pattern "*_test.py" --start-directory src/test/py --top-level-directory .; \
+	coverage report; \
+	coverage html'
