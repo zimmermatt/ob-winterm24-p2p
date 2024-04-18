@@ -29,6 +29,27 @@ class Ledger:
         self.top = hashlib.sha256(combined_hash).digest()
         self.queue.append((peer.keys["public"], self.top))
 
+    def get_owner(self):
+        """
+        Get the current owner of the artwork.
+        """
+
+        return self.queue[-1][0]
+
+    def get_previous_owner(self):
+        """
+        Get the previous owner of the artwork.
+        """
+
+        return self.queue[-2][0] if len(self.queue) > 1 else None
+
+    def get_owner_history(self):
+        """
+        Get the owner history of the artwork with hashes.
+        """
+
+        return self.queue
+
     def verify_integrity(self):
         """
         Verify the integrity of the ledger.
