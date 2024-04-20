@@ -28,6 +28,16 @@ class Wallet:
 
         self.balance += amount
 
+    def remove_balance(self, amount: int):
+        """
+        Removes balance from the wallet.
+
+        Params:
+        - amount (int): The amount to add to the wallet.
+        """
+
+        self.balance -= amount
+
     def add_pending_balance(self, amount: int):
         """
         Adds pending balance to the wallet.
