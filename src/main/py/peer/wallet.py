@@ -1,7 +1,7 @@
 """
 Module to manage peer wallet functionality.
 
-Wallet class allows us to ...
+Wallet class allows us to manage the balance of a peer.
 """
 
 
