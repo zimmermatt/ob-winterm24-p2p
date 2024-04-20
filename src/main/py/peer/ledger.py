@@ -43,12 +43,20 @@ class Ledger:
 
         return self.queue[-2][0] if len(self.queue) > 1 else None
 
+    def get_originator(self):
+        """
+        Get the first owner of the artwork.
+        """
+
+        return self.queue[0][0]
+
     def get_owner_history(self):
         """
         Get the owner history of the artwork with hashes.
         """
 
         return self.queue
+
 
     def verify_integrity(self):
         """

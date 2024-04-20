@@ -164,6 +164,14 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.ledger.add_owner(self.peer2)
         self.assertEqual(self.ledger.get_previous_owner(), self.peer.keys["public"])
 
+    def test_get_originator(self):
+        """
+        Test the get_originator method of Ledger
+        """
+
+        self.ledger.add_owner(self.peer)
+        self.assertEqual(self.ledger.get_originator(), self.peer.keys["public"])
+
     def test_get_owner_history(self):
         """
         Test the get_owner_history method of Ledger
