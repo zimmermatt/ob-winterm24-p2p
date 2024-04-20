@@ -57,7 +57,6 @@ class Ledger:
 
         return self.queue
 
-
     def verify_integrity(self):
         """
         Verify the integrity of the ledger.
