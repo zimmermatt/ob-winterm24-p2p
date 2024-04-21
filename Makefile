@@ -27,7 +27,7 @@ frontend:
 	export PYTHONPATH=src/main/py; \
 	./devops/deploy/spin-up-script.sh &
 	export PYTHONPATH=src/main/py; \
-	python src/main/py/frontend/frontend.py 50050 "keys/node50" "127.0.0.1:50000"
+	python src/main/py/frontend/frontend.py 50050 "keys/node50" "127.0.0.1:50004"
 
 test: ruff pylint
 	export PYTHONPATH=src/main/py; \
