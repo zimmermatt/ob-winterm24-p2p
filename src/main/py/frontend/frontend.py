@@ -18,24 +18,38 @@ class Frontend:
 
     def __init__(self, peer):
         """Constructor for the frontend"""
-        self.peer = peer
+        self.peer: Peer = peer
+        self.commission_frames = []
+
+    def create_item_row(self, window, commission):
+        """Create a row for a commission in the GUI"""
+        # Create a new frame for the item row
+        frame = tk.Frame(window)
+        frame.pack(fill=tk.X)
+        self.commission_frames.append(frame)
+        # Create a label for the item
+        label = tk.Label(frame, text=f"From: {commission.key} | Width: {commission.width} | Height: {commission.height} | Wait Time: {commission.wait_time}", width=100)
+        label.pack(side=tk.LEFT)
+
+        # Create a contribute button for the item
+        button = tk.Button(
+            frame,
+            text="Contribute",
+            command=lambda: asyncio.create_task(self.peer.contribute_to_artwork(commission)),
+        )
+        button.pack(side=tk.LEFT)
 
     def update_commissions(self, window):
         """Update the commission requests in the GUI"""
-        # Clear the window
-        for widget in window.winfo_children():
-            widget.destroy()
+        # Destroy the old frames
+        for frame in self.commission_frames:
+            frame.destroy()
         # Get the commission requests from the peer
         commissions = self.peer.commission_requests_recieved
-        # Create a label for each commission request
+        # Add each commission request to the listbox
         for commission in commissions:
-            commission_label = tk.Label(window, text=commission)
-            commission_label.pack()
-        # Add button to reset the gui labelled "Back to commission page"
-        reset_button = tk.Button(
-            window, text="Reset GUI", command=lambda: self.reset_gui(window)
-        )
-        reset_button.pack()
+            # Get the commission details
+            self.create_item_row(window, commission)
 
     def reset_gui(self, window):
         """Reset the GUI to the commission page"""
@@ -68,6 +82,13 @@ class Frontend:
             ),
         )
         button.pack()
+
+        # Create the commission requests
+        commission_requests_label = tk.Label(window, text="Commission Requests:")
+        commission_requests_label.pack()
+        self.update_commissions(window)
+        self.peer.gui_callback = lambda: self.update_commissions(window)
+        self.update_commissions(window)
 
     def commission_art_piece(self, width_entry, height_entry, wait_entry, window):
         """Call commission art piece and display the result in the GUI"""
@@ -112,7 +133,7 @@ class Frontend:
         """Create the GUI for the peer"""
         # def run_tkinter_mainloop():
         window = tk.Tk()
-        window.geometry("500x500")  # Set the window size to 500x500
+        window.geometry("1000x500")  # Set the window size to 500x500
 
         # Create the width textbox
         width_label = tk.Label(window, text="Width:")
@@ -132,6 +153,7 @@ class Frontend:
         wait_entry = tk.Entry(window)
         wait_entry.pack()
 
+        # Create submit button
         button = tk.Button(
             window,
             text="Commission Art Piece",
@@ -143,6 +165,11 @@ class Frontend:
             ),
         )
         button.pack()
+
+        # Create the commission requests
+        commission_requests_label = tk.Label(window, text="Commission Requests:")
+        commission_requests_label.pack()
+        self.update_commissions(window)
         self.peer.gui_callback = lambda: self.update_commissions(window)
 
         def update():

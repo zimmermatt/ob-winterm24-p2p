@@ -300,7 +300,8 @@ class Peer:
                 self.commission_requests_recieved.append(message_object)
                 if callable(self.gui_callback):
                     self.gui_callback()  # pylint: disable=not-callable
-                self.contribute_to_artwork(message_object)
+                else:
+                    await self.contribute_to_artwork(message_object)
         elif isinstance(message_object, ArtFragment):
             if message_object.artwork_id in self.inventory.commissions:
                 self.inventory.commissions[

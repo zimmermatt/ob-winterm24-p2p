@@ -105,6 +105,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         This test verifies that the commission_art_piece method correctly adds a commission,
         publishes it on Kademlia, and schedules and sends a deadline notice.
         """
+        # Try savin the loop and running as usual. Look into why this doesnt work a little bit more.
         with patch(
             "asyncio.get_event_loop",
             return_value=MagicMock(
