@@ -7,6 +7,7 @@ import asyncio
 from datetime import timedelta
 import logging
 import pickle
+from collections import deque
 import unittest
 from unittest.mock import patch, call, MagicMock, AsyncMock
 from commission.artwork import Artwork
@@ -178,7 +179,8 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         """
 
         self.ledger.add_owner(self.peer)
-        self.assertEqual(self.ledger.get_owner_history(), self.ledger.queue)
+        expected_queue = deque([(self.peer.keys["public"], self.ledger.top)])
+        self.assertEqual(self.ledger.get_owner_history(), expected_queue)
 
     def test_verify_integrity(self):
         """
