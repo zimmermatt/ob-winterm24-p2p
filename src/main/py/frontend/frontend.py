@@ -28,14 +28,26 @@ class Frontend:
         frame.pack(fill=tk.X)
         self.commission_frames.append(frame)
         # Create a label for the item
-        label = tk.Label(frame, text=f"From: {commission.key} | Width: {commission.width} | Height: {commission.height} | Wait Time: {commission.wait_time}", width=100)
+        # pylint: disable=consider-using-f-string
+        label = tk.Label(
+            frame,
+            text="From: {} | Width: {} | Height: {} | Wait Time: {}".format(
+                commission.key,
+                commission.width,
+                commission.height,
+                commission.wait_time,
+            ),
+            width=100,
+        )
         label.pack(side=tk.LEFT)
 
         # Create a contribute button for the item
         button = tk.Button(
             frame,
             text="Contribute",
-            command=lambda: asyncio.create_task(self.peer.contribute_to_artwork(commission)),
+            command=lambda: asyncio.create_task(
+                self.peer.contribute_to_artwork(commission)
+            ),
         )
         button.pack(side=tk.LEFT)
 

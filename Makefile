@@ -23,6 +23,12 @@ run:
 	export PYTHONPATH=src/main/py; \
 		python3 -m peer.peer 50000 "src/test/py/resources/peer_test" "0.0.0.0:50000"
 
+frontend:
+	export PYTHONPATH=src/main/py; \
+	./devops/deploy/spin-up-script.sh &
+	export PYTHONPATH=src/main/py; \
+	python src/main/py/frontend/frontend.py 50050 "keys/node50" "127.0.0.1:50000"
+
 test: ruff pylint
 	export PYTHONPATH=src/main/py; \
 	    coverage run -m unittest discover --pattern "*_test.py" \
