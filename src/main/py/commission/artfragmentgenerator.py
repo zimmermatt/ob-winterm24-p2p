@@ -21,17 +21,17 @@ logger = logging.getLogger("ArtFragmentGenerator")
 
 def generate_fragment(
     artwork: Artwork,
-    originator_long_id: int,
-    contributor_id: str,
-    contributor_long_id: int,
+    originator_id: int,
+    contributor_SOMETHING: str,
+    contributor_id: int,
 ) -> ArtFragment:
     """Generates an ArtFragment instance
 
     Args:
         artwork (Artwork): Artwork that the ArtFragment is intended for.
-        originator_long_id (int): Originator id who commissioned the artwork.
-        contributor_id (int): Peer id that created the ArtFragment.
-        contributor_long_id (int): Peer long id that created the ArtFragment.
+        originator_id (int): ID of the peer that commissioned the artwork.
+        contributor_SOMETHING (int):
+        contributor_id (int): ID of the peer that is contributing to the artwork.
 
     Returns:
         ArtFragment: art fragment that adheres to artwork's constraint.
@@ -40,14 +40,14 @@ def generate_fragment(
     subcanvas = generate_subcanvas(artwork.width, artwork.height)
 
     pixels = generate_pixels(
-        originator_long_id, contributor_long_id, subcanvas, constraint
+        originator_id, contributor_id, subcanvas, constraint
     )
-    fragment = ArtFragment(artwork.get_key(), contributor_id, pixels)
+    fragment = ArtFragment(artwork.get_key(), contributor_SOMETHING, pixels)
     return fragment
 
 
 def generate_subcanvas(width: int, height: int) -> Subcanvas:
-    """Generates starting (x,y) coordinates with width and height adhering to artwork
+    """Generates starting (x,y) coordinates with width and height within bounds of the artwork.
 
     Args:
         width (int): artwork's width.
@@ -71,8 +71,8 @@ def generate_subcanvas(width: int, height: int) -> Subcanvas:
 
 
 def generate_pixels(
-    originator_long_id: int,
-    contributor_long_id: int,
+    originator_id: int,
+    contributor_id: int,
     subcanvas: Subcanvas,
     constraint: Constraint = None,
 ) -> set:
@@ -82,19 +82,17 @@ def generate_pixels(
     - implement line type adherence
 
     Args:
-        originator_long_id (int): the artwork's originator long id.
-        contributor_long_id (int): the contributor's long id.
+        originator_id (int): ID of the peer that commissioned the artwork.
+        contributor_id (int): ID of the peer that is contributing to the artwork.
         subcanvas (Subcanvas): the subcanvas that the contributor will draw on.
         constraint (Constraint, optional): _description_. Defaults to None.
 
     Returns:
         set: a set of pixels with coordinates and colors adhering to subcanvas and constraints.
     """
-
-    # if there is a constraint, generate pixels that adhere to it
     if constraint is not None:
         palette = get_palette(
-            originator_long_id, contributor_long_id, constraint.palette_limit
+            originator_id, contributor_id, constraint.palette_limit
         )
     # random constraint of 1 color if no constraint
     else:
@@ -112,7 +110,6 @@ def generate_pixels(
     width = subcanvas.dimensions[0]
     height = subcanvas.dimensions[1]
 
-    # generate the set of pixels to occupy
     num_pixels = randrange(0, width * height)
     x_bound = x_coordinate + width
     y_bound = y_coordinate + height
@@ -122,7 +119,6 @@ def generate_pixels(
         coordinates = Coordinates(
             randrange(x_coordinate, x_bound), randrange(y_coordinate, y_bound)
         )
-        # randomly pick a color from the palette
         pixel = Pixel(coordinates, random.choice(palette))
         set_pixels.add(pixel)
         num_pixels -= 1
@@ -131,21 +127,21 @@ def generate_pixels(
 
 
 def get_palette(
-    originator_long_id: int, contributor_long_id: int, palette_limit: int
+    originator_id: int, contributor_id: int, palette_limit: int
 ) -> list:
     """
     Get palette corresponding to palette_limit and distance from originator to contributor
 
     Args:
-        originator_long_id (int): originator's long id
-        contributor_long_id (int): contributor's long id
+        originator_id (int): ID of the peer that commissioned the artwork.
+        contributor_id (int): ID of the peer that is contributing to the artwork.
         palette_limit (int): the number of colors in palette
 
     Returns:
         list: a list of colors in the palette
     """
 
-    distance = originator_long_id ^ contributor_long_id
+    distance = originator_id ^ contributor_id
     random.seed(distance)
 
     # Create an array of palette_limit*3 color channels

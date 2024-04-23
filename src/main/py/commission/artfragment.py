@@ -14,9 +14,9 @@ from drawing.drawing import Pixel
 class ArtFragment:
     """
     Class to create ArtFragment
-    - artwork (Artwork): Artwork that ArtFragment is contributing to
-    - contributor_id (str): ID of peer generating the ArtFragment
-    - pixels (set[Pixel]): set of pixels that fragment occupies
+    - artwork_id (int): ID of Artwork that fragment is contributing to.
+    - contributor_SOMETHING (int):
+    - pixels (set[Pixel]): set of pixels that fragment occupies.
     """
 
     artwork_id: str

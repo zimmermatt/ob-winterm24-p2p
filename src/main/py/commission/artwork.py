@@ -34,7 +34,7 @@ class Artwork:
         - wait_time (timedelta): The wait time for the artwork as a timedelta.
         - constraint (Constraint): Constraint instance set to the artwork.
         - ledger: An instance of the Ledger class.
-        - originator_long_id (str): The originator's long id.
+        - originator_long_id (int): The originator's long id.
         """
         self.width = width
         self.height = height
