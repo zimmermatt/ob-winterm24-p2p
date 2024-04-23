@@ -43,6 +43,16 @@ def generate_fragment(
     fragment = ArtFragment(artwork.get_key(), contributor_SOMETHING, pixels)
     return fragment
 
+def get_bounds(coordinates: Coordinates, width: int, height: int) -> tuple[int,int]:
+    """Get bounds of how big a subcanvas can be.
+
+    Args:
+        coordinates (Coordinates): starting coordinates of subcanvas.
+        width (int): width of artwork.
+        height (int): height of artwork.
+    """
+    bounds = (1 + width - coordinates.x, 1 + height - coordinates.y)
+    return bounds
 
 def generate_subcanvas(width: int, height: int) -> Subcanvas:
     """Generates starting (x,y) coordinates with width and height within bounds of the artwork.
@@ -57,8 +67,8 @@ def generate_subcanvas(width: int, height: int) -> Subcanvas:
     x_coordinate = randrange(0, width)
     y_coordinate = randrange(0, height)
     coordinates = Coordinates(x_coordinate, y_coordinate)
-    bounds = (1 + width - coordinates.x, 1 + height - coordinates.y)
 
+    bounds = get_bounds(coordinates, width, height)
     subcanvas_width = randrange(1, bounds[0])
     subcanvas_height = randrange(1, bounds[1])
 
@@ -90,7 +100,6 @@ def generate_pixels(
     """
     if constraint is not None:
         palette = get_palette(originator_id, contributor_id, constraint.palette_limit)
-    # random constraint of 1 color if no constraint
     else:
         palette = [
             Color(
