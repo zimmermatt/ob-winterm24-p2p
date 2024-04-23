@@ -15,7 +15,7 @@ class ArtFragment:
     """
     Class to create ArtFragment
     - artwork_id (int): ID of Artwork that fragment is contributing to.
-    - contributor_SOMETHING (int):
+    - contributor_pkey (int):
     - pixels (set[Pixel]): set of pixels that fragment occupies.
     """
 
