@@ -39,9 +39,7 @@ def generate_fragment(
     constraint = artwork.constraint
     subcanvas = generate_subcanvas(artwork.width, artwork.height)
 
-    pixels = generate_pixels(
-        originator_id, contributor_id, subcanvas, constraint
-    )
+    pixels = generate_pixels(originator_id, contributor_id, subcanvas, constraint)
     fragment = ArtFragment(artwork.get_key(), contributor_SOMETHING, pixels)
     return fragment
 
@@ -91,9 +89,7 @@ def generate_pixels(
         set: a set of pixels with coordinates and colors adhering to subcanvas and constraints.
     """
     if constraint is not None:
-        palette = get_palette(
-            originator_id, contributor_id, constraint.palette_limit
-        )
+        palette = get_palette(originator_id, contributor_id, constraint.palette_limit)
     # random constraint of 1 color if no constraint
     else:
         palette = [
@@ -126,9 +122,7 @@ def generate_pixels(
     return set_pixels
 
 
-def get_palette(
-    originator_id: int, contributor_id: int, palette_limit: int
-) -> list:
+def get_palette(originator_id: int, contributor_id: int, palette_limit: int) -> list:
     """
     Get palette corresponding to palette_limit and distance from originator to contributor
 
