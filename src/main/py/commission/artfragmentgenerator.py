@@ -43,7 +43,8 @@ def generate_fragment(
     fragment = ArtFragment(artwork.get_key(), contributor_SOMETHING, pixels)
     return fragment
 
-def get_bounds(coordinates: Coordinates, width: int, height: int) -> tuple[int,int]:
+
+def get_bounds(coordinates: Coordinates, width: int, height: int) -> tuple[int, int]:
     """Get bounds of how big a subcanvas can be.
 
     Args:
@@ -53,6 +54,7 @@ def get_bounds(coordinates: Coordinates, width: int, height: int) -> tuple[int,i
     """
     bounds = (1 + width - coordinates.x, 1 + height - coordinates.y)
     return bounds
+
 
 def generate_subcanvas(width: int, height: int) -> Subcanvas:
     """Generates starting (x,y) coordinates with width and height within bounds of the artwork.
