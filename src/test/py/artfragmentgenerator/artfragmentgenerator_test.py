@@ -7,9 +7,13 @@ Simple Test Module for the ArtFragmentGenerator class
 import unittest
 from unittest.mock import Mock
 from datetime import timedelta
-from commission.artfragmentgenerator import generate_subcanvas, generate_pixels
+from commission.artfragmentgenerator import (
+    generate_subcanvas,
+    generate_pixels,
+    get_bounds,
+)
 from commission.artwork import Artwork
-from drawing.drawing import Color, Constraint
+from drawing.drawing import Color, Constraint, Coordinates
 
 
 class TestArtFragmentGenerator(unittest.TestCase):
@@ -32,13 +36,32 @@ class TestArtFragmentGenerator(unittest.TestCase):
         subcanvas_width = subcanvas.dimensions[0]
         subcanvas_height = subcanvas.dimensions[1]
 
-        width_bound = artwork.width - x_coordinate + 1
-        height_bound = artwork.height - y_coordinate + 1
+        width_bound = artwork.width - x_coordinate
+        height_bound = artwork.height - y_coordinate
 
         self.assertLess(x_coordinate, artwork.width)
         self.assertLess(y_coordinate, artwork.height)
         self.assertLessEqual(subcanvas_width, width_bound)
         self.assertLessEqual(subcanvas_height, height_bound)
+
+    def test_get_bounds(self):
+        """Test get_bounds method for bound adherence"""
+        width = 1000
+        height = 500
+        coordinates = Coordinates(999, 499)
+        bounds = get_bounds(coordinates, width, height)
+        self.assertEqual(bounds[0], 1)
+        self.assertEqual(bounds[1], 1)
+
+        coordinates = Coordinates(0, 0)
+        bounds = get_bounds(coordinates, width, height)
+        self.assertEqual(bounds[0], 1000)
+        self.assertEqual(bounds[1], 500)
+
+        coordinates = Coordinates(1000, 500)
+        bounds = get_bounds(coordinates, width, height)
+        self.assertEqual(bounds[0], 0)
+        self.assertEqual(bounds[1], 0)
 
     def test_generate_pixels_random_constraint(self):
         """

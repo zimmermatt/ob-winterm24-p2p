@@ -52,7 +52,7 @@ def get_bounds(coordinates: Coordinates, width: int, height: int) -> tuple[int, 
         width (int): width of artwork.
         height (int): height of artwork.
     """
-    bounds = (1 + width - coordinates.x, 1 + height - coordinates.y)
+    bounds = (width - coordinates.x, height - coordinates.y)
     return bounds
 
 
@@ -71,8 +71,8 @@ def generate_subcanvas(width: int, height: int) -> Subcanvas:
     coordinates = Coordinates(x_coordinate, y_coordinate)
 
     bounds = get_bounds(coordinates, width, height)
-    subcanvas_width = randrange(1, bounds[0])
-    subcanvas_height = randrange(1, bounds[1])
+    subcanvas_width = randrange(1, bounds[0] + 1)
+    subcanvas_height = randrange(1, bounds[1] + 1)
 
     subcanvas = Subcanvas(
         coordinates=coordinates, dimensions=(subcanvas_width, subcanvas_height)
