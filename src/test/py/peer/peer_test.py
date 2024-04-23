@@ -7,12 +7,14 @@ import asyncio
 from datetime import timedelta
 import logging
 import pickle
+from collections import deque
 import unittest
 from unittest.mock import patch, call, MagicMock, AsyncMock
 from commission.artwork import Artwork
 from peer.peer import Peer
 from peer.ledger import Ledger
 from peer.inventory import Inventory
+from peer.wallet import Wallet
 from trade.offer_announcement import OfferAnnouncement
 from trade.offer_response import OfferResponse
 
@@ -83,6 +85,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.peer.inventory = Inventory()
         self.peer.inventory.add_owned_artwork(self.artwork1)
         self.peer.node = self.mock_node
+        self.peer.wallet = Wallet()
 
         self.peer2 = Peer(
             8000, "src/test/py/resources/peer_test", "127.0.0.1:5000", self.mock_kdm
@@ -142,6 +145,42 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
 
         self.ledger.add_owner(self.peer)
         self.assertEqual(self.ledger.queue[-1][0], self.peer.keys["public"])
+
+    def test_get_owner(self):
+        """
+        Test the get_owner method of Ledger
+        """
+
+        self.ledger.add_owner(self.peer)
+        self.assertEqual(self.ledger.get_owner(), self.peer.keys["public"])
+
+    def test_get_previous_owner(self):
+        """
+        Test the get_previous_owner method of Ledger
+        """
+
+        self.ledger.add_owner(self.peer)
+        self.assertIsNone(self.ledger.get_previous_owner())
+
+        self.ledger.add_owner(self.peer2)
+        self.assertEqual(self.ledger.get_previous_owner(), self.peer.keys["public"])
+
+    def test_get_originator(self):
+        """
+        Test the get_originator method of Ledger
+        """
+
+        self.ledger.add_owner(self.peer)
+        self.assertEqual(self.ledger.get_originator(), self.peer.keys["public"])
+
+    def test_get_owner_history(self):
+        """
+        Test the get_owner_history method of Ledger
+        """
+
+        self.ledger.add_owner(self.peer)
+        expected_queue = deque([(self.peer.keys["public"], self.ledger.top)])
+        self.assertEqual(self.ledger.get_owner_history(), expected_queue)
 
     def test_verify_integrity(self):
         """
