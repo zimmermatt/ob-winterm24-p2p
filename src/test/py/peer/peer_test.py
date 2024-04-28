@@ -19,6 +19,7 @@ from peer.wallet import Wallet
 from trade.offer_announcement import OfferAnnouncement
 from trade.offer_response import OfferResponse
 
+
 class MockNode:
     """
     A mock implementation of the Node class.
