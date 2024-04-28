@@ -17,6 +17,7 @@ from peer.inventory import Inventory
 from trade.offer_announcement import OfferAnnouncement
 from trade.offer_response import OfferResponse
 
+
 class MockNode:
     """
     A mock implementation of the Node class.
