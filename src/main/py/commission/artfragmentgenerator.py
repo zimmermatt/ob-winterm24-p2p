@@ -22,7 +22,7 @@ logger = logging.getLogger("ArtFragmentGenerator")
 def generate_fragment(
     artwork: Artwork,
     originator_id: int,
-    contributor_pkey: str,
+    contributor_signing_key: str,
     contributor_id: int,
 ) -> ArtFragment:
     """Generates an ArtFragment instance
@@ -30,7 +30,7 @@ def generate_fragment(
     Args:
         artwork (Artwork): Artwork that the ArtFragment is intended for.
         originator_id (int): ID of the peer that commissioned the artwork.
-        contributor_pkey (int):
+        contributor_signing_key (int):
         contributor_id (int): ID of the peer that is contributing to the artwork.
 
     Returns:
@@ -40,7 +40,7 @@ def generate_fragment(
     subcanvas = generate_subcanvas(artwork.width, artwork.height)
 
     pixels = generate_pixels(originator_id, contributor_id, subcanvas, constraint)
-    fragment = ArtFragment(artwork.get_key(), contributor_pkey, pixels)
+    fragment = ArtFragment(artwork.get_key(), contributor_signing_key, pixels)
     return fragment
 
 
