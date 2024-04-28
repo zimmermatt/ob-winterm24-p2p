@@ -29,12 +29,12 @@ class Artwork:
     ):
         """
         Initializes an instance of the Artwork class.
-        - width (int): The width of the artwork in pixels.
-        - height (float): The height of the artwork in pixels.
-        - wait_time (timedelta): The wait time for the artwork as a timedelta.
-        - constraint (Constraint): Constraint instance set to the artwork.
+        - width: The width of the artwork in pixels.
+        - height: The height of the artwork in pixels.
+        - wait_time: The wait time for the artwork as a timedelta.
+        - constraint: Constraint instance set to the artwork.
         - ledger: An instance of the Ledger class.
-        - originator_long_id (int): The originator's long id.
+        - originator_long_id: The originator's long id.
         """
         self.width = width
         self.height = height

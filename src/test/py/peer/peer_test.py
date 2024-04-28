@@ -17,11 +17,6 @@ from peer.inventory import Inventory
 from trade.offer_announcement import OfferAnnouncement
 from trade.offer_response import OfferResponse
 
-MockChildNode = namedtuple(
-    "MockChildNode", ["long_id"], defaults=(int(hex(12345), 16),) * 1
-)
-
-
 class MockNode:
     """
     A mock implementation of the Node class.
@@ -30,7 +25,6 @@ class MockNode:
     def __init__(self):
         """Initializes an instance of the MockNode class."""
         self.data_store = {}
-        self.node = MockChildNode()
 
     async def set(self, key, value):
         """Stores a value based on the key."""
@@ -70,7 +64,12 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         """
 
         self.mock_kdm = MagicMock()
-        self.mock_node = AsyncMock(spec=MockNode)
+        self.mock_node = AsyncMock(
+            spec=MockNode,
+            node=namedtuple(
+                "MockChildNode", ["long_id"], defaults=(int(hex(12345), 16),) * 1
+            ),
+        )
         self.mock_kdm.return_value = self.mock_node
         self.peer = Peer(
             5001,
