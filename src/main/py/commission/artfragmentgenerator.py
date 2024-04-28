@@ -28,10 +28,10 @@ def generate_fragment(
     """Generates an ArtFragment instance
 
     Args:
-        artwork (Artwork): Artwork that the ArtFragment is intended for.
-        originator_id (int): ID of the peer that commissioned the artwork.
-        contributor_signing_key (int):
-        contributor_id (int): ID of the peer that is contributing to the artwork.
+        artwork: Artwork that the ArtFragment is intended for.
+        originator_id: ID of the peer that commissioned the artwork.
+        contributor_signing_key: signing key of the peer that is contributing to the artwork.
+        contributor_id: ID of the peer that is contributing to the artwork.
 
     Returns:
         ArtFragment: art fragment that adheres to artwork's constraint.
@@ -48,9 +48,9 @@ def get_bounds(coordinates: Coordinates, width: int, height: int) -> tuple[int, 
     """Get bounds of how big a subcanvas can be.
 
     Args:
-        coordinates (Coordinates): starting coordinates of subcanvas.
-        width (int): width of artwork.
-        height (int): height of artwork.
+        coordinates: starting coordinates of subcanvas.
+        width: width of artwork.
+        height: height of artwork.
     """
     bounds = (width - coordinates.x, height - coordinates.y)
     return bounds
@@ -60,8 +60,8 @@ def generate_subcanvas(width: int, height: int) -> Subcanvas:
     """Generates starting (x,y) coordinates with width and height within bounds of the artwork.
 
     Args:
-        width (int): artwork's width.
-        height (int): artwork's height.
+        width: artwork's width.
+        height: artwork's height.
 
     Returns:
         Subcanvas: a subcanvas that is within the artwork's width and height.
@@ -92,10 +92,10 @@ def generate_pixels(
     - implement line type adherence
 
     Args:
-        originator_id (int): ID of the peer that commissioned the artwork.
-        contributor_id (int): ID of the peer that is contributing to the artwork.
-        subcanvas (Subcanvas): the subcanvas that the contributor will draw on.
-        constraint (Constraint, optional): _description_. Defaults to None.
+        originator_id : ID of the peer that commissioned the artwork.
+        contributor_id: ID of the peer that is contributing to the artwork.
+        subcanvas: the subcanvas that the contributor will draw on.
+        constraint: Constraint of subcanvas. Defaults to None.
 
     Returns:
         set: a set of pixels with coordinates and colors adhering to subcanvas and constraints.
@@ -138,9 +138,9 @@ def get_palette(originator_id: int, contributor_id: int, palette_limit: int) -> 
     Get palette corresponding to palette_limit and distance from originator to contributor
 
     Args:
-        originator_id (int): ID of the peer that commissioned the artwork.
-        contributor_id (int): ID of the peer that is contributing to the artwork.
-        palette_limit (int): the number of colors in palette
+        originator_id: ID of the peer that commissioned the artwork.
+        contributor_id: ID of the peer that is contributing to the artwork.
+        palette_limit: the number of colors in palette
 
     Returns:
         list: a list of colors in the palette
