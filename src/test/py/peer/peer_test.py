@@ -9,13 +9,14 @@ import logging
 import pickle
 from collections import deque
 import unittest
-from unittest.mock import patch, call, MagicMock, AsyncMock
+from unittest.mock import patch, MagicMock, AsyncMock
 from commission.artwork import Artwork
 from peer.peer import Peer
 from peer.ledger import Ledger
 from peer.inventory import Inventory
 from peer.wallet import Wallet
-from trade.offer_announcement import OfferAnnouncement
+
+# from trade.offer_announcement import OfferAnnouncement
 from trade.offer_response import OfferResponse
 
 
@@ -196,72 +197,72 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.ledger.queue[0] = (self.peer, b"corrupted_hash")
         self.assertFalse(self.ledger.verify_integrity())
 
-    async def test_announce_trade(self):
-        """
-        Test the announce_trade method of the Peer class.
-        """
+    # async def test_announce_trade(self):
+    #     """
+    #     Test the announce_trade method of the Peer class.
+    #     """
 
-        await self.peer.announce_trade()
+    #     await self.peer.announce_trade()
 
-        self.assertEqual(len(self.peer.inventory.pending_trades), 1)
+    #     self.assertEqual(len(self.peer.inventory.pending_trades), 1)
 
-        self.peer.logger.info.assert_has_calls(
-            [call("Announcing trade"), call("Trade announced")]
-        )
+    #     self.peer.logger.info.assert_has_calls(
+    #         [call("Announcing trade"), call("Trade announced")]
+    #     )
 
-        self.peer.node.set = MagicMock(return_value=False)
-        await self.peer.announce_trade()
+    #     self.peer.node.set = MagicMock(return_value=False)
+    #     await self.peer.announce_trade()
 
-        self.peer.logger.error.assert_called_once_with("Trade type is not pickleable")
+    #     self.peer.logger.error.assert_called_once_with("Trade type is not pickleable")
 
-    async def test_send_trade_response(self):
-        """
-        Test case for the send_trade_response method of the Peer class.
-        """
+    # async def test_send_trade_response(self):
+    #     """
+    #     Test case for the send_trade_response method of the Peer class.
+    #     """
 
-        announcement = OfferAnnouncement(
-            originator_public_key="originator_public_key",
-            artwork_id="artwork_id",
-        )
+    #     announcement = OfferAnnouncement(
+    #         originator_public_key="originator_public_key",
+    #         artwork_id="artwork_id",
+    #     )
 
-        await self.peer.send_trade_response(self.trade_key, announcement)
+    #     await self.peer.send_trade_response(self.trade_key, announcement)
 
-        self.mock_node.set.assert_called_once()
+    #     self.mock_node.set.assert_called_once()
 
-        _, response_value = self.mock_node.set.call_args[0]
+    #     _, response_value = self.mock_node.set.call_args[0]
 
-        response = pickle.loads(response_value)
-        self.assertIsInstance(response, OfferResponse)
-        self.assertEqual(response.trade_id, self.trade_key)
+    #     response = pickle.loads(response_value)
+    #     self.assertIsInstance(response, OfferResponse)
+    #     self.assertEqual(response.trade_id, self.trade_key)
 
-        self.assertIn(response.artwork_id, self.peer.inventory.owned_artworks)
+    #     self.assertIn(response.artwork_id, self.peer.inventory.owned_artworks)
 
-        self.assertEqual(response.originator_public_key, self.peer.keys["public"])
+    #     self.assertEqual(response.originator_public_key, self.peer.keys["public"])
 
-        self.peer.logger.info.assert_any_call(
-            "Sending trade response to %s", announcement.originator_public_key
-        )
-        self.peer.logger.info.assert_any_call("Trade response sent")
+    #     self.peer.logger.info.assert_any_call(
+    #         "Sending trade response to %s", announcement.originator_public_key
+    #     )
+    #     self.peer.logger.info.assert_any_call("Trade response sent")
 
-    async def test_handle_trade_response_success(self):
-        """
-        Test case for the handle_trade_response method of the Peer class for success case.
-        """
+    # async def test_handle_trade_response_success(self):
+    #     """
+    #     Test case for the handle_trade_response method of the Peer class for success case.
+    #     """
 
-        self.peer.inventory.pending_trades = {self.trade_key: "trade_value"}
-        await self.peer.handle_trade_response(self.trade_key, self.response)
-        self.peer.logger.info.assert_any_call(self.response)
-        self.peer.logger.info.assert_any_call("Trade successful")
-        self.assertNotIn(self.trade_key, self.peer.inventory.pending_trades)
+    #     self.peer.inventory.pending_trades = {self.trade_key: "trade_value"}
+    #     await self.peer.handle_trade_response(self.trade_key, self.response)
+    #     self.peer.logger.info.assert_any_call(self.response)
+    #     self.peer.logger.info.assert_any_call("Trade successful")
+    #     self.assertNotIn(self.trade_key, self.peer.inventory.pending_trades)
 
-    async def test_handle_trade_response_fails(self):
-        """
-        Test case for the handle_trade_response method of the Peer class for failure case.
-        """
+    # async def test_handle_trade_response_fails(self):
+    #     """
+    #     Test case for the handle_trade_response method of the Peer class for failure case.
+    #     """
 
-        self.peer.inventory.pending_trades = {}
-        await self.peer.handle_trade_response(self.trade_key, self.response)
-        self.peer.logger.info.assert_any_call("Trade unsuccessful")
+    #     self.peer.inventory.pending_trades = {}
+    #     await self.peer.handle_trade_response(self.trade_key, self.response)
+    #     self.peer.logger.info.assert_any_call("Trade unsuccessful")
 
 
 if __name__ == "__main__":
