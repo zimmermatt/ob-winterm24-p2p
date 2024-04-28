@@ -15,7 +15,7 @@ class ArtFragment:
     """
     Class to create ArtFragment
     - artwork_id: ID of Artwork that fragment is contributing to.
-    - contributor_signing_key:
+    - contributor_signing_key: signing key of the peer that is contributing to the artwork.
     - pixels: set of pixels that fragment occupies.
     """
 
