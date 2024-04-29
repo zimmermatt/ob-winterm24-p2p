@@ -4,11 +4,10 @@ Test Module for the Peer class
 """
 
 import asyncio
-from collections import namedtuple
+from collections import namedtuple, deque
 from datetime import timedelta
 import logging
 import pickle
-from collections import deque
 import unittest
 from unittest.mock import patch, call, MagicMock, AsyncMock
 from commission.artwork import Artwork
