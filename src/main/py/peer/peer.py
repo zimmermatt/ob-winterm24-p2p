@@ -21,6 +21,7 @@ from peer.ledger import Ledger
 from peer.inventory import Inventory
 from trade.offer_response import OfferResponse
 from trade.offer_announcement import OfferAnnouncement
+from drawing.drawing import Constraint
 import utils
 
 
@@ -132,13 +133,17 @@ class Peer:
             try:
                 width = float(input("Enter commission width: "))
                 height = float(input("Enter commission height: "))
+                palette_limit = float(input("Enter palette limit: "))
                 wait_time = float(input("Enter wait time in seconds: "))
+                constraint = Constraint(palette_limit, "any")
                 commission = Artwork(
                     width,
                     height,
                     timedelta(seconds=wait_time),
                     self.ledger,
+                    constraint=constraint,
                     originator_public_key=self.keys["public"],
+                    originator_long_id=self.node.node.long_id,
                 )
                 await self.send_commission_request(commission)
                 self.inventory.add_commission(commission)
@@ -281,7 +286,12 @@ class Peer:
                 not message_object.commission_complete
                 and message_object.originator_public_key != self.keys["public"]
             ):
-                fragment = generate_fragment(message_object, self.keys["public"])
+                fragment = generate_fragment(
+                    message_object,
+                    message_object.originator_long_id,
+                    self.keys["public"],
+                    self.node.node.long_id,
+                )
                 try:
                     set_success = await self.node.set(
                         utils.generate_random_sha1_hash(), pickle.dumps(fragment)
@@ -333,8 +343,8 @@ class Peer:
         pixels = canvas.load()
 
         for pixel in fragment.pixels:
-            # Making them black for now
             pixels[pixel.coordinates.x, pixel.coordinates.y] = pixel.color
+
         return canvas
 
     async def create_new_ledger_entry(self) -> Ledger:
