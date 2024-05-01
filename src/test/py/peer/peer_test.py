@@ -16,9 +16,6 @@ from peer.ledger import Ledger
 from peer.inventory import Inventory
 from peer.wallet import Wallet
 
-# from trade.offer_announcement import OfferAnnouncement
-from trade.offer_response import OfferResponse
-
 
 class MockNode:
     """
@@ -87,13 +84,16 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.peer.inventory.add_owned_artwork(self.artwork1)
         self.peer.node = self.mock_node
         self.peer.wallet = Wallet()
+        self.peer.wallet.add_to_balance(20)
 
         self.peer2 = Peer(
             8000, "src/test/py/resources/peer_test", "127.0.0.1:5000", self.mock_kdm
         )
 
-        self.trade_key = b"trade_key"
-        self.response = OfferResponse(self.trade_key, "artwork_id", "public_key")
+        # self.trade_key = b"trade_key"
+        # self.response = OfferResponse(self.trade_key, "artwork_id", "public_key")
+
+        self.artwork_price = 10
 
     def test_initialization(self):
         """

@@ -134,3 +134,13 @@ class Inventory:
             random_artwork = random.choice(available_artworks)
             return random_artwork
         return None
+
+    def get_artwork_by_id(self, artwork_id: bytes):
+        """
+        Returns an owned artwork from the inventory by its ID.
+        """
+
+        for artwork in self.owned_artworks.values():
+            if artwork.id == artwork_id:
+                return artwork
+        raise KeyError(f"No owned artwork found for ID: {artwork_id}")

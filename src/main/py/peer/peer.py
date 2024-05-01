@@ -165,8 +165,8 @@ class Peer:
         self.inventory.remove_pending_exchange(announcement_key)
         self.inventory.completed_exchanges.add(announcement_key)
 
-        if announcement_type == "sale":
-            self.wallet.add_to_balance(offer_announcement.get_price())
+        # balance should be 0 for "trade", so no need for an if statement
+        self.wallet.add_to_balance(offer_announcement.get_price())
         try:
             set_success = await self.node.set(
                 announcement_key, pickle.dumps(offer_announcement)
@@ -178,7 +178,7 @@ class Peer:
         except TypeError:
             self.logger.error("%s type is not pickleable", announcement_type)
 
-    async def announce_exchange(self, wait_time=timedelta(seconds=10)):
+    async def announce_exchange(self, price: int, wait_time=timedelta(seconds=10)):
         """
         Announce an exchange to the network.
         """
@@ -191,7 +191,7 @@ class Peer:
 
         exchange_type = random.choice(["sale", "trade"])
         offer_announcement = (
-            OfferAnnouncement(artwork, exchange_type, 10)
+            OfferAnnouncement(artwork, exchange_type, price)
             if exchange_type == "sale"
             else OfferAnnouncement(artwork, exchange_type, 0)
         )
@@ -284,6 +284,7 @@ class Peer:
                 self.logger.error(
                     "%s response failed to send", announcement.get_exchange_type()
                 )
+
         except TypeError:
             self.logger.error(
                 "%s response type is not pickleable", announcement.get_exchange_type()
@@ -316,16 +317,16 @@ class Peer:
     ):
         """Handle an accepted exchange"""
 
-        if response.get_price() != 0:
-            self.logger.info("Previous balance: %d", self.wallet.get_balance())
-            self.wallet.remove_from_balance(response.get_price())
-            self.logger.info("New balance: %d", self.wallet.get_balance())
-        self.logger.info(response)
+        self.wallet.remove_from_balance(response.get_price())
+        artwork = self.inventory.get_artwork_by_id(response.get_artwork_id())
+        artwork.ledger.add_owner(self)
 
     async def handle_reject_exchange(self, response: OfferResponse):
         """Handle a rejected exchange"""
 
-        self.logger.info(response)
+        self.logger.info(
+            "%s rejected the exchange.", response.get_originator_public_key()
+        )
 
     async def data_stored_callback(self, key, value):
         """
