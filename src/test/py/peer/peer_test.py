@@ -15,6 +15,8 @@ from peer.peer import Peer
 from peer.ledger import Ledger
 from peer.inventory import Inventory
 from peer.wallet import Wallet
+from exchange.offer_announcement import OfferAnnouncement
+from exchange.offer_response import OfferResponse
 
 
 class MockNode:
@@ -49,6 +51,7 @@ class MockNode:
         return False
 
 
+# pylint: disable=too-many-public-methods
 class TestPeer(unittest.IsolatedAsyncioTestCase):
     """
     Class to test peer functionality.
@@ -89,10 +92,6 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.peer2 = Peer(
             8000, "src/test/py/resources/peer_test", "127.0.0.1:5000", self.mock_kdm
         )
-
-        # self.trade_key = b"trade_key"
-        # self.response = OfferResponse(self.trade_key, "artwork_id", "public_key")
-
         self.artwork_price = 10
 
     def test_initialization(self):
@@ -197,72 +196,238 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.ledger.queue[0] = (self.peer, b"corrupted_hash")
         self.assertFalse(self.ledger.verify_integrity())
 
-    # async def test_announce_trade(self):
-    #     """
-    #     Test the announce_trade method of the Peer class.
-    #     """
+    async def test_handle_exchange_announcement_deadline_trade(self):
+        """
+        Test case for the handle_exchange_announcement_deadline method for the trade exchange_type
+        of the Peer class.
+        """
 
-    #     await self.peer.announce_trade()
+        announcement_type = "trade"
+        announcement_key = "key"
+        offer_announcement = OfferAnnouncement("trade", 0, "artwork")
 
-    #     self.assertEqual(len(self.peer.inventory.pending_trades), 1)
+        await self.peer.handle_exchange_announcement_deadline(
+            announcement_type, announcement_key, offer_announcement
+        )
 
-    #     self.peer.logger.info.assert_has_calls(
-    #         [call("Announcing trade"), call("Trade announced")]
-    #     )
+        self.assertNotIn(announcement_key, self.peer.inventory.pending_exchanges)
+        self.assertIn(announcement_key, self.peer.inventory.completed_exchanges)
+        self.peer.node.set.assert_called_once_with(
+            announcement_key, pickle.dumps(offer_announcement)
+        )
+        self.peer.logger.info.assert_any_call("Exchange announcement deadline reached")
+        self.peer.logger.info.assert_any_call("%s announced", announcement_type)
 
-    #     self.peer.node.set = MagicMock(return_value=False)
-    #     await self.peer.announce_trade()
+    async def test_handle_exchange_announcement_deadline_sale(self):
+        """
+        Test case for the handle_exchange_announcement_deadline method for the sale exchange type
+        of the Peer class.
+        """
 
-    #     self.peer.logger.error.assert_called_once_with("Trade type is not pickleable")
+        announcement_type = "trade"
+        announcement_key = "key"
+        offer_announcement = OfferAnnouncement("trade", 10, "artwork")
 
-    # async def test_send_trade_response(self):
-    #     """
-    #     Test case for the send_trade_response method of the Peer class.
-    #     """
+        await self.peer.handle_exchange_announcement_deadline(
+            announcement_type, announcement_key, offer_announcement
+        )
 
-    #     announcement = OfferAnnouncement(
-    #         originator_public_key="originator_public_key",
-    #         artwork_id="artwork_id",
-    #     )
+        self.assertNotIn(announcement_key, self.peer.inventory.pending_exchanges)
+        self.assertIn(announcement_key, self.peer.inventory.completed_exchanges)
+        self.assertEqual(self.peer.wallet.get_balance(), 30)
+        self.peer.node.set.assert_called_once_with(
+            announcement_key, pickle.dumps(offer_announcement)
+        )
+        self.peer.logger.info.assert_any_call("Exchange announcement deadline reached")
+        self.peer.logger.info.assert_any_call("%s announced", announcement_type)
 
-    #     await self.peer.send_trade_response(self.trade_key, announcement)
+    async def test_handle_exchange_announcement_deadline_failure(self):
+        """
+        Test case for the handle_exchange_announcement_deadline method for the failure case
+        """
 
-    #     self.mock_node.set.assert_called_once()
+        announcement_type = "invalid"
+        announcement_key = "key"
+        offer_announcement = OfferAnnouncement("trade", 0, "artwork")
 
-    #     _, response_value = self.mock_node.set.call_args[0]
+        self.peer.node.set = AsyncMock(side_effect=TypeError())
 
-    #     response = pickle.loads(response_value)
-    #     self.assertIsInstance(response, OfferResponse)
-    #     self.assertEqual(response.trade_id, self.trade_key)
+        await self.peer.handle_exchange_announcement_deadline(
+            announcement_type, announcement_key, offer_announcement
+        )
 
-    #     self.assertIn(response.artwork_id, self.peer.inventory.owned_artworks)
+        self.peer.logger.error.assert_called_with(
+            "%s type is not pickleable", announcement_type
+        )
 
-    #     self.assertEqual(response.originator_public_key, self.peer.keys["public"])
+    async def test_announce_exchange_trade(self):
+        """
+        Test case for the announce_exchange method of the Peer class for trade exchange type.
+        """
 
-    #     self.peer.logger.info.assert_any_call(
-    #         "Sending trade response to %s", announcement.originator_public_key
-    #     )
-    #     self.peer.logger.info.assert_any_call("Trade response sent")
+        self.mock_node.set = AsyncMock(return_value=True)
+        self.peer.inventory.get_artwork_to_exchange = MagicMock(
+            return_value=self.artwork1
+        )
+        self.peer.handle_exchange_announcement_deadline = AsyncMock()
 
-    # async def test_handle_trade_response_success(self):
-    #     """
-    #     Test case for the handle_trade_response method of the Peer class for success case.
-    #     """
+        await self.peer.announce_exchange("trade", 10, timedelta(seconds=20))
 
-    #     self.peer.inventory.pending_trades = {self.trade_key: "trade_value"}
-    #     await self.peer.handle_trade_response(self.trade_key, self.response)
-    #     self.peer.logger.info.assert_any_call(self.response)
-    #     self.peer.logger.info.assert_any_call("Trade successful")
-    #     self.assertNotIn(self.trade_key, self.peer.inventory.pending_trades)
+        self.peer.logger.info.assert_any_call("Announcing exchange")
+        self.peer.inventory.get_artwork_to_exchange.assert_called_once()
+        self.mock_node.set.assert_called_once()
+        self.peer.handle_exchange_announcement_deadline.assert_called_once()
 
-    # async def test_handle_trade_response_fails(self):
-    #     """
-    #     Test case for the handle_trade_response method of the Peer class for failure case.
-    #     """
+    async def test_announce_exchange_sale(self):
+        """
+        Test case for the announce_exchange method of the Peer class for sale exchange type.
+        """
 
-    #     self.peer.inventory.pending_trades = {}
-    #     await self.peer.handle_trade_response(self.trade_key, self.response)
-    #     self.peer.logger.info.assert_any_call("Trade unsuccessful")
+        self.mock_node.set = AsyncMock(return_value=True)
+        self.peer.inventory.get_artwork_to_exchange = MagicMock(
+            return_value=self.artwork1
+        )
+        self.peer.handle_exchange_announcement_deadline = AsyncMock()
+
+        await self.peer.announce_exchange("sale", 10, timedelta(seconds=20))
+
+        self.peer.logger.info.assert_any_call("Announcing exchange")
+        self.peer.inventory.get_artwork_to_exchange.assert_called_once()
+        self.mock_node.set.assert_called_once()
+        self.peer.handle_exchange_announcement_deadline.assert_called_once()
+
+    async def test_announce_exchange_invalid_exchange_type(self):
+        """
+        Test case for the announce_exchange method of the Peer class for invalid
+        exchange type.
+        """
+
+        await self.peer.announce_exchange("invalid", 10, timedelta(seconds=20))
+
+        self.peer.logger.error.assert_called_once_with("Invalid exchange type")
+
+    async def send_exchange_response_trade(self):
+        """
+        Test case for the send_exchange_response method of the Peer class for trade exchange type.
+        """
+
+        exchange_key = b"key"
+        offer_announcement = OfferAnnouncement("trade", 0, "artwork", "public_key")
+        artwork_to_exchange = self.artwork1
+
+        self.peer.keys["public"] = "public_key"
+        self.peer.inventory.artworks = [artwork_to_exchange]
+
+        await self.peer.send_exchange_response(exchange_key, offer_announcement)
+
+        self.peer.logger.info.assert_called_with(
+            "Sending %s response to %s", "trade", "public_key"
+        )
+
+        self.assertIn(exchange_key, self.peer.inventory.pending_exchanges)
+        self.peer.node.set.assert_called_once()
+        self.peer.logger.info.assert_called_with("%s response sent", "trade")
+
+    async def send_exchange_response_sale(self):
+        """
+        Test case for the send_exchange_response method of the Peer class for sale exchange type.
+        """
+
+        exchange_key = b"key"
+        offer_announcement = OfferAnnouncement("sale", 10, "artwork", "public_key")
+        artwork_to_exchange = self.artwork1
+
+        self.peer.keys["public"] = "public_key"
+        self.peer.inventory.artworks = [artwork_to_exchange]
+
+        await self.peer.send_exchange_response(exchange_key, offer_announcement)
+
+        self.peer.logger.info.assert_called_with(
+            "Sending %s response to %s", "sale", "public_key"
+        )
+
+        self.assertIn(exchange_key, self.peer.inventory.pending_exchanges)
+        self.peer.node.set.assert_called_once()
+        self.peer.logger.info.assert_called_with("%s response sent", "sale")
+
+    async def test_handle_exchange_response_trade(self):
+        """
+        Test case for the handle_exchange_response method of the Peer class for
+        trade exchange type.
+        """
+
+        self.peer.handle_accept_exchange = AsyncMock()
+        self.peer.handle_reject_exchange = AsyncMock()
+
+        exchange_key = b"key"
+        response = OfferResponse("trade", "artwork", 0, "public_key")
+        self.peer.inventory.pending_exchanges = {exchange_key: "value"}
+
+        await self.peer.handle_exchange_response(exchange_key, response)
+
+        self.peer.logger.info.assert_any_call("Handling exchange response")
+        self.assertNotIn(exchange_key, self.peer.inventory.pending_exchanges)
+        self.peer.handle_accept_exchange.assert_called_once_with(response)
+        self.peer.logger.info.assert_any_call("Exchange successful")
+        self.peer.handle_reject_exchange.assert_not_called()
+
+    async def test_handle_exchange_response_sale(self):
+        """
+        Test case for the handle_exchange_response method of the Peer class for
+        sale exchange type.
+        """
+
+        self.peer.handle_accept_exchange = AsyncMock()
+        self.peer.handle_reject_exchange = AsyncMock()
+
+        exchange_key = b"key"
+        response = OfferResponse("sale", "artwork", 10, "public_key")
+        self.peer.inventory.pending_exchanges = {exchange_key: "value"}
+
+        await self.peer.handle_exchange_response(exchange_key, response)
+
+        self.peer.logger.info.assert_any_call("Handling exchange response")
+        self.assertNotIn(exchange_key, self.peer.inventory.pending_exchanges)
+        self.peer.handle_accept_exchange.assert_called_once_with(response)
+        self.peer.logger.info.assert_any_call("Exchange successful")
+        self.peer.handle_reject_exchange.assert_not_called()
+
+    async def test_handle_exchange_response_failure(self):
+        """
+        Test case for the handle_exchange_response method of the Peer class for failure case.
+        """
+
+        exchange_key = b"key"
+        response = OfferResponse("trade", "artwork", 0, "public_key")
+        self.peer.inventory.pending_exchanges = {}
+
+        await self.peer.handle_exchange_response(exchange_key, response)
+
+        self.peer.logger.info.assert_any_call("Handling exchange response")
+        self.peer.logger.info.assert_any_call("Exchange unsuccessful")
+
+    async def test_handle_accept_exchange(self):
+        """Test case for the handle_accept_exchange method of the Peer class."""
+
+        response = OfferResponse("sale", "artwork", 10, "public_key")
+
+        await self.peer.handle_accept_exchange(response)
+
+        self.assertEqual(10, self.peer.wallet.get_balance())
+        self.peer.logger.info.assert_called_once_with(
+            "%s accepted the exchange.", response.get_originator_public_key()
+        )
+
+    async def test_handle_reject_exchange(self):
+        """Test case for the handle_reject_exchange method of the Peer class."""
+
+        response = OfferResponse("sale", "artwork", 10, "public_key")
+
+        await self.peer.handle_reject_exchange(response)
+
+        self.peer.logger.info.assert_called_once_with(
+            "%s rejected the exchange.", response.get_originator_public_key()
+        )
 
 
 if __name__ == "__main__":

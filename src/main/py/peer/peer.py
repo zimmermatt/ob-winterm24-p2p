@@ -12,7 +12,6 @@ import ipaddress
 import pickle
 import logging
 import sys
-import random
 from PIL import Image
 from server.network import NotifyingServer as kademlia
 from commission.artfragment import ArtFragment
@@ -21,8 +20,8 @@ from commission.artfragmentgenerator import generate_fragment
 from peer.ledger import Ledger
 from peer.inventory import Inventory
 from peer.wallet import Wallet
-from trade.offer_response import OfferResponse
-from trade.offer_announcement import OfferAnnouncement
+from exchange.offer_response import OfferResponse
+from exchange.offer_announcement import OfferAnnouncement
 import utils
 
 
@@ -167,6 +166,7 @@ class Peer:
 
         # balance should be 0 for "trade", so no need for an if statement
         self.wallet.add_to_balance(offer_announcement.get_price())
+        self.logger.info("Exchange announcement deadline reached")  # Add this line
         try:
             set_success = await self.node.set(
                 announcement_key, pickle.dumps(offer_announcement)
@@ -178,10 +178,16 @@ class Peer:
         except TypeError:
             self.logger.error("%s type is not pickleable", announcement_type)
 
-    async def announce_exchange(self, price: int, wait_time=timedelta(seconds=10)):
+    async def announce_exchange(
+        self, exchange_type: str, price: int, wait_time=timedelta(seconds=10)
+    ):
         """
         Announce an exchange to the network.
         """
+
+        if exchange_type not in ("sale", "trade"):
+            self.logger.error("Invalid exchange type")
+            return
 
         self.logger.info("Announcing exchange")
         artwork = self.inventory.get_artwork_to_exchange()
@@ -189,7 +195,6 @@ class Peer:
             self.logger.info("No artwork for exchange")
             return
 
-        exchange_type = random.choice(["sale", "trade"])
         offer_announcement = (
             OfferAnnouncement(artwork, exchange_type, price)
             if exchange_type == "sale"
@@ -299,17 +304,17 @@ class Peer:
         Handle an exchange response from the network.
         """
 
-        self.logger.info("Handling trade response")
+        self.logger.info("Handling exchange response")
         if exchange_key in self.inventory.pending_exchanges:
             self.inventory.remove_pending_exchange(exchange_key)
             if response.get_price() == 0:
                 if response.exchange_id in self.inventory.pending_exchanges:
                     self.inventory.remove_pending_exchange(response.trade_id)
             await self.handle_accept_exchange(response)
-            self.logger.info("Trade successful")
+            self.logger.info("Exchange successful")
         else:
             await self.handle_reject_exchange(response)
-            self.logger.info("Trade unsuccessful")
+            self.logger.info("Exchange unsuccessful")
 
     async def handle_accept_exchange(
         self,
@@ -318,8 +323,9 @@ class Peer:
         """Handle an accepted exchange"""
 
         self.wallet.remove_from_balance(response.get_price())
-        artwork = self.inventory.get_artwork_by_id(response.get_artwork_id())
-        artwork.ledger.add_owner(self)
+        self.logger.info(
+            "%s accepted the exchange.", response.get_originator_public_key()
+        )
 
     async def handle_reject_exchange(self, response: OfferResponse):
         """Handle a rejected exchange"""
