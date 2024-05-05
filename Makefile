@@ -24,7 +24,7 @@ ruff-format:
 
 run:
 	export PYTHONPATH=src/main/py; \
-		python3 -m peer.peer 50000 "src/test/py/resources/peer_test" "0.0.0.0:50000"
+		python -m peer.peer 50000 "src/test/py/resources/peer_test" "0.0.0.0:50000"
 
 test: ruff-check pylint
 	export PYTHONPATH=src/main/py; \
@@ -33,3 +33,14 @@ test: ruff-check pylint
 		  --top-level-directory .
 	coverage report
 	coverage html
+
+container:
+	podman build -t myapp .
+	podman run --rm -i myapp < input.txt
+
+container-test: ruff pylint
+	podman build -t myapp .
+	podman run --rm -i myapp < input.txt sh -c '\
+	coverage run -m unittest discover --pattern "*_test.py" --start-directory src/test/py --top-level-directory .; \
+	coverage report; \
+	coverage html'
