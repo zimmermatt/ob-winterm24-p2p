@@ -66,7 +66,7 @@ class Peer:
             self.keys["private"] = private_key_file.read()
         self.kdm = kdm
         self.node = None
-        self.commission_requests_recieved = []
+        self.commission_requests_received = []
         self.gui_callback = None
         self.inventory = Inventory()
         self.ledger = Ledger()
@@ -134,10 +134,9 @@ class Peer:
 
         while True:
             try:
-                if not (width and height and wait_time):
-                    width = float(input("Enter commission width: "))
-                    height = float(input("Enter commission height: "))
-                    wait_time = float(input("Enter wait time in seconds: "))
+                width = float(input("Enter commission width: ")) if not width else width
+                height = float(input("Enter commission height: ")) if not height else height
+                wait_time = float(input("Enter wait time in seconds: ")) if not wait_time else wait_time
                 commission = Artwork(
                     width,
                     height,
@@ -297,7 +296,7 @@ class Peer:
                 not message_object.commission_complete
                 and message_object.originator_public_key != self.keys["public"]
             ):
-                self.commission_requests_recieved.append(message_object)
+                self.commission_requests_received.append(message_object)
                 if callable(self.gui_callback):
                     self.gui_callback()  # pylint: disable=not-callable
                 else:

@@ -16,27 +16,23 @@ from peer.peer import Peer
 class Frontend:
     """Class to manage the frontend of the peer"""
 
-    def __init__(self, peer):
+    def __init__(self, peer: Peer):
         """Constructor for the frontend"""
         self.peer: Peer = peer
         self.commission_frames = []
 
     def create_item_row(self, window, commission):
         """Create a row for a commission in the GUI"""
-        # Create a new frame for the item row
         frame = tk.Frame(window)
         frame.pack(fill=tk.X)
         self.commission_frames.append(frame)
         # Create a label for the item
-        # pylint: disable=consider-using-f-string
         label = tk.Label(
             frame,
-            text="From: {} | Width: {} | Height: {} | Wait Time: {}".format(
-                commission.key,
-                commission.width,
-                commission.height,
-                commission.wait_time,
-            ),
+            text=f"From: {commission.key} |"
+                    + f"Width: {commission.width} |"
+                    + f"Height: {commission.height} |"
+                    + f"Wait Time: {commission.wait_time}",
             width=100,
         )
         label.pack(side=tk.LEFT)
@@ -57,18 +53,13 @@ class Frontend:
         for frame in self.commission_frames:
             frame.destroy()
         # Get the commission requests from the peer
-        commissions = self.peer.commission_requests_recieved
+        commissions = self.peer.commission_requests_received
         # Add each commission request to the listbox
         for commission in commissions:
             # Get the commission details
             self.create_item_row(window, commission)
 
-    def reset_gui(self, window):
-        """Reset the GUI to the commission page"""
-        # Clear the window
-        for widget in window.winfo_children():
-            widget.destroy()
-            # Create the width textbox
+    def insert_gui_elements(self, window):
         width_label = tk.Label(window, text="Width:")
         width_label.pack()
         width_entry = tk.Entry(window)
@@ -101,6 +92,14 @@ class Frontend:
         self.update_commissions(window)
         self.peer.gui_callback = lambda: self.update_commissions(window)
         self.update_commissions(window)
+
+    def reset_gui(self, window):
+        """Reset the GUI to the commission page"""
+        # Clear the window
+        for widget in window.winfo_children():
+            widget.destroy()
+            # Create the width textbox
+        self.insert_gui_elements(window)
 
     def commission_art_piece(self, width_entry, height_entry, wait_entry, window):
         """Call commission art piece and display the result in the GUI"""
@@ -143,46 +142,10 @@ class Frontend:
 
     def create_gui(self):
         """Create the GUI for the peer"""
-        # def run_tkinter_mainloop():
         window = tk.Tk()
-        window.geometry("1000x500")  # Set the window size to 500x500
+        window.geometry("1000x500")
 
-        # Create the width textbox
-        width_label = tk.Label(window, text="Width:")
-        width_label.pack()
-        width_entry = tk.Entry(window)
-        width_entry.pack()
-
-        # Create the height textbox
-        height_label = tk.Label(window, text="Height:")
-        height_label.pack()
-        height_entry = tk.Entry(window)
-        height_entry.pack()
-
-        # Create the wait time textbox
-        wait_label = tk.Label(window, text="Wait Time:")
-        wait_label.pack()
-        wait_entry = tk.Entry(window)
-        wait_entry.pack()
-
-        # Create submit button
-        button = tk.Button(
-            window,
-            text="Commission Art Piece",
-            command=lambda: self.commission_art_piece(
-                width_entry.get(),
-                height_entry.get(),
-                wait_entry.get(),
-                window,
-            ),
-        )
-        button.pack()
-
-        # Create the commission requests
-        commission_requests_label = tk.Label(window, text="Commission Requests:")
-        commission_requests_label.pack()
-        self.update_commissions(window)
-        self.peer.gui_callback = lambda: self.update_commissions(window)
+        self.insert_gui_elements(window)
 
         def update():
             window.update()
@@ -195,7 +158,7 @@ async def main():
     """Main function
 
     Run the file with the following:
-    python3 peer.py <port_num> <key_filename> <address>
+    python3 frontend.py <port_num> <key_filename> <address>
     """
 
     logging.basicConfig(
@@ -203,7 +166,7 @@ async def main():
     )
     key_filename, port_num = sys.argv[2], int(sys.argv[1])
     address = None
-    if len(sys.argv) != 3:
+    if len(sys.argv) > 3:
         address = sys.argv[3]
     peer = Peer(port_num, key_filename, address, kademlia)
     await peer.connect_to_network()
