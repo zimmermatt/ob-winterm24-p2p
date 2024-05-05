@@ -135,8 +135,14 @@ class Peer:
         while True:
             try:
                 width = float(input("Enter commission width: ")) if not width else width
-                height = float(input("Enter commission height: ")) if not height else height
-                wait_time = float(input("Enter wait time in seconds: ")) if not wait_time else wait_time
+                height = (
+                    float(input("Enter commission height: ")) if not height else height
+                )
+                wait_time = (
+                    float(input("Enter wait time in seconds: "))
+                    if not wait_time
+                    else wait_time
+                )
                 commission = Artwork(
                     width,
                     height,

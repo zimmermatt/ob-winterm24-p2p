@@ -30,9 +30,9 @@ class Frontend:
         label = tk.Label(
             frame,
             text=f"From: {commission.key} |"
-                    + f"Width: {commission.width} |"
-                    + f"Height: {commission.height} |"
-                    + f"Wait Time: {commission.wait_time}",
+            + f"Width: {commission.width} |"
+            + f"Height: {commission.height} |"
+            + f"Wait Time: {commission.wait_time}",
             width=100,
         )
         label.pack(side=tk.LEFT)
@@ -60,6 +60,7 @@ class Frontend:
             self.create_item_row(window, commission)
 
     def insert_gui_elements(self, window):
+        """Create all of the base gui elements"""
         width_label = tk.Label(window, text="Width:")
         width_label.pack()
         width_entry = tk.Entry(window)
