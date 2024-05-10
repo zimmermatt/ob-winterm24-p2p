@@ -164,9 +164,9 @@ class Peer:
         self.inventory.remove_pending_exchange(announcement_key)
         self.inventory.completed_exchanges.add(announcement_key)
 
-        # balance should be 0 for "trade", so no need for an if statement
         self.wallet.add_to_balance(offer_announcement.get_price())
-        self.logger.info("Exchange announcement deadline reached")  # Add this line
+        self.logger.info("Exchange announcement deadline reached")
+
         try:
             set_success = await self.node.set(
                 announcement_key, pickle.dumps(offer_announcement)
@@ -179,7 +179,10 @@ class Peer:
             self.logger.error("%s type is not pickleable", announcement_type)
 
     async def announce_exchange(
-        self, exchange_type: str, price: int, wait_time=timedelta(seconds=10)
+        self,
+        exchange_type: str,
+        price: int,
+        wait_time=timedelta(seconds=10),
     ):
         """
         Announce an exchange to the network.
@@ -195,11 +198,7 @@ class Peer:
             self.logger.info("No artwork for exchange")
             return
 
-        offer_announcement = (
-            OfferAnnouncement(artwork, exchange_type, price)
-            if exchange_type == "sale"
-            else OfferAnnouncement(artwork, exchange_type, 0)
-        )
+        offer_announcement = OfferAnnouncement(artwork, price, exchange_type)
 
         announcement_key = utils.generate_random_sha1_hash()
         self.inventory.add_pending_exchange(announcement_key, offer_announcement)
@@ -240,11 +239,10 @@ class Peer:
             ):
                 self.inventory.remove_pending_exchange(exchange_key)
                 return
-
         if announcement.get_exchange_type() == "sale":
             if announcement.deadline_reached:
                 return
-            if self.wallet.get_balance() <= announcement.get_price():
+            if self.wallet.get_balance() < announcement.get_price():
                 self.logger.info("Insufficient funds.")
                 return
 
@@ -257,28 +255,23 @@ class Peer:
         if announcement.get_exchange_type() == "trade":
             artwork_to_exchange = self.inventory.get_artwork_to_exchange()
             if not artwork_to_exchange:
-                self.logger.info("No trade response to send")
+                self.logger.info("No artwork to send")
                 return
         offer_response = (
             OfferResponse(
                 exchange_key,
-                artwork_to_exchange.key,
+                artwork_to_exchange,
                 announcement.get_price(),
                 self.keys["public"],
             )
             if announcement.get_exchange_type() == "trade"
             else OfferResponse(
-                exchange_key, "", announcement.get_price(), self.keys["public"]
+                exchange_key, None, announcement.get_price(), self.keys["public"]
             )
         )
 
         response_key = utils.generate_random_sha1_hash()
 
-        if announcement.get_exchange_type() == "trade":
-            self.inventory.add_pending_exchange(
-                exchange_key,
-                offer_response,
-            )
         try:
             set_success = await self.node.set(
                 response_key, pickle.dumps(offer_response)
@@ -307,9 +300,6 @@ class Peer:
         self.logger.info("Handling exchange response")
         if exchange_key in self.inventory.pending_exchanges:
             self.inventory.remove_pending_exchange(exchange_key)
-            if response.get_price() == 0:
-                if response.exchange_id in self.inventory.pending_exchanges:
-                    self.inventory.remove_pending_exchange(response.trade_id)
             await self.handle_accept_exchange(response)
             self.logger.info("Exchange successful")
         else:
@@ -323,15 +313,13 @@ class Peer:
         """Handle an accepted exchange"""
 
         self.wallet.remove_from_balance(response.get_price())
-        self.logger.info(
-            "%s accepted the exchange.", response.get_originator_public_key()
-        )
+        self.logger.info("%s accepted the exchange.", response.get_exchanger_public_key)
 
     async def handle_reject_exchange(self, response: OfferResponse):
         """Handle a rejected exchange"""
 
         self.logger.info(
-            "%s rejected the exchange.", response.get_originator_public_key()
+            "%s rejected the exchange.", response.get_exchanger_public_key()
         )
 
     async def data_stored_callback(self, key, value):
@@ -412,7 +400,7 @@ class Peer:
         Create a new ledger for the artwork
         """
 
-        add = await self.ledger.add_owner(self)
+        add = await self.ledger.add_owner(self.keys["public"])
         if not add:
             self.logger.error("Failed to add owner to ledger")
             return

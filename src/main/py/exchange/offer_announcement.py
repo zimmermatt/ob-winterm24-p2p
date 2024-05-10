@@ -5,6 +5,8 @@ Module to manage exchange announcement functionality.
 OfferAnnouncement class allows us to create a exchange announcement
 """
 
+from commission.artwork import Artwork
+
 
 class OfferAnnouncement:
     """
@@ -13,7 +15,7 @@ class OfferAnnouncement:
 
     def __init__(
         self,
-        artwork_id: str,
+        artwork: Artwork,
         price: int,
         exchange_type: str,
         originator_public_key: str = "",
@@ -22,25 +24,18 @@ class OfferAnnouncement:
         Initializes an instance of the OfferAnnouncement class.
         """
 
-        self.artwork_id = artwork_id
-        self.originator_public_key = originator_public_key
+        self.artwork = artwork
         self.price = price
         self.exchange_type = exchange_type
+        self.originator_public_key = originator_public_key
         self.deadline_reached = False
 
-    def get_artwork_id(self):
+    def get_artwork(self):
         """
-        Returns the artwork to be traded.
-        """
-
-        return self.artwork_id
-
-    def get_originator_public_key(self):
-        """
-        Returns the public key of the originator of the exchange announcement.
+        Returns the artwork that is exchanged
         """
 
-        return self.originator_public_key
+        return self.artwork
 
     def get_price(self):
         """
@@ -55,3 +50,10 @@ class OfferAnnouncement:
         """
 
         return self.exchange_type
+
+    def get_originator_public_key(self):
+        """
+        Returns the public key of the originator of the exchange announcement.
+        """
+
+        return self.originator_public_key

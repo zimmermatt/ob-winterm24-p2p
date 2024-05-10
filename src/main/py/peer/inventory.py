@@ -50,7 +50,7 @@ class Inventory:
         to add to the inventory.
         """
 
-        self.artworks_pending_exchange.add(exchange_offer.artwork_id)
+        self.artworks_pending_exchange.add(exchange_offer.artwork)
         self.pending_exchanges[exchange_key] = exchange_offer
 
     def remove_commission(self, artwork: Artwork):

@@ -5,48 +5,46 @@ Module to manage trade response functionality.
 OfferResponse class allows us to respond to a trade Announcement
 """
 
+from commission.artwork import Artwork
+
 
 class OfferResponse:
     """
     Class to manage exchange responses
     """
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         exchange_id: str,
-        artwork_id: str,
+        artwork: Artwork,
         price: int,
-        originator_public_key: str = "",
+        exchange_type: str,
+        exchanger_public_key: str = "",
     ):
         """
         Initializes an instance of the OfferResponse class.
         """
 
         self.exchange_id = exchange_id
-        self.artwork_id = artwork_id
+        self.artwork = artwork
         self.price = price
-        self.originator_public_key = originator_public_key
+        self.exchange_type: exchange_type
+        self.public_key = exchanger_public_key
 
     def get_exchange_id(self):
         """
-        Returns the exchange id to respond to.
+        Returns the id of the exchange.
         """
 
         return self.exchange_id
 
-    def get_originator_public_key(self):
+    def get_artwork(self):
         """
-        Returns the public key of the originator of the exchange response.
-        """
-
-        return self.originator_public_key
-
-    def get_artwork_id(self):
-        """
-        Returns the artwork ledger key to respond to.
+        Returns the artwork that is being exchanged.
         """
 
-        return self.artwork_id
+        return self.artwork
 
     def get_price(self):
         """
@@ -54,3 +52,17 @@ class OfferResponse:
         """
 
         return self.price
+
+    def get_exchange_type(self):
+        """
+        Returns the exchange type from the OfferAnnouncement.
+        """
+
+        return self.exchange_type
+
+    def get_exchanger_public_key(self):
+        """
+        Returns the public key of the originator of the exchange response.
+        """
+
+        return self.public_key
