@@ -4,10 +4,10 @@ Test Module for the Peer class
 """
 
 import asyncio
+from collections import namedtuple, deque
 from datetime import timedelta
 import logging
 import pickle
-from collections import deque
 import unittest
 from unittest.mock import patch, MagicMock, AsyncMock
 from commission.artwork import Artwork
@@ -67,7 +67,12 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         """
 
         self.mock_kdm = MagicMock()
-        self.mock_node = AsyncMock(spec=MockNode)
+        self.mock_node = AsyncMock(
+            spec=MockNode,
+            node=namedtuple(
+                "MockChildNode", ["long_id"], defaults=(int(hex(12345), 16),) * 1
+            ),
+        )
         self.mock_kdm.return_value = self.mock_node
         self.peer = Peer(
             5001,
@@ -128,7 +133,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         await self.peer.connect_to_network()
         self.peer.node.bootstrap.assert_called_once()
 
-    @patch("builtins.input", side_effect=["10", "20", "10"])
+    @patch("builtins.input", side_effect=["10", "20", "5", "10"])
     async def test_commission_art_piece(self, mock_input):
         """
         Test case for the commission_art_piece method of the Peer class.
@@ -150,6 +155,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             )
             self.assertEqual(commission.width, 10)
             self.assertEqual(commission.height, 20)
+            self.assertEqual(commission.constraint.palette_limit, 5)
             self.assertLessEqual(commission.wait_time, timedelta(seconds=10))
             await self.deadline_task
 
@@ -350,6 +356,8 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
             self.offer_response_sale.get_exchanger_public_key,
         )
         self.peer.logger.info("Exchange unsuccessful")
+
+    # def test_commission_with_palette_limit:
 
 
 if __name__ == "__main__":
