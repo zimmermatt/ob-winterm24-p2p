@@ -78,7 +78,7 @@ class Peer:
         """
 
         commission.set_complete()
-        commission.ledger.add_owner(self)
+        commission.ledger.add_owner(self.keys["public"])
         try:
             set_success = await self.node.set(
                 commission.get_key(), pickle.dumps(commission)
@@ -318,7 +318,9 @@ class Peer:
         """Handle an accepted exchange"""
 
         self.wallet.remove_from_balance(response.get_price())
-        self.logger.info("%s accepted the exchange.", response.get_exchanger_public_key)
+        exchanger = response.get_exchanger_public_key()
+        self.ledger.add_owner(exchanger)
+        self.logger.info("%s accepted the exchange.", exchanger)
 
     async def handle_reject_exchange(self, response: OfferResponse):
         """Handle a rejected exchange"""

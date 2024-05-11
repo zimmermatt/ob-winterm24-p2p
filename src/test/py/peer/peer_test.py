@@ -84,9 +84,9 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         self.peer.logger = MagicMock()
 
         self.deadline_task = None
-        self.ledger = Ledger()
-        self.artwork1 = Artwork(10, 10, timedelta(minutes=10), self.ledger)
-        self.artwork2 = Artwork(10, 10, timedelta(minutes=10), self.ledger)
+        self.peer.ledger = Ledger()
+        self.artwork1 = Artwork(10, 10, timedelta(minutes=10), self.peer.ledger)
+        self.artwork2 = Artwork(10, 10, timedelta(minutes=10), self.peer.ledger)
 
         self.peer.inventory = Inventory()
         self.peer.inventory.add_owned_artwork(self.artwork1)
@@ -164,58 +164,60 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         Test the add_owner method of Ledger
         """
 
-        self.ledger.add_owner(self.peer)
-        self.assertEqual(self.ledger.queue[-1][0], self.peer.keys["public"])
+        self.peer.ledger.add_owner(self.peer.keys["public"])
+        self.assertEqual(self.peer.ledger.queue[-1][0], self.peer.keys["public"])
 
     def test_get_owner(self):
         """
         Test the get_owner method of Ledger
         """
 
-        self.ledger.add_owner(self.peer)
-        self.assertEqual(self.ledger.get_owner(), self.peer.keys["public"])
+        self.peer.ledger.add_owner(self.peer.keys["public"])
+        self.assertEqual(self.peer.ledger.get_owner(), self.peer.keys["public"])
 
     def test_get_previous_owner(self):
         """
         Test the get_previous_owner method of Ledger
         """
 
-        self.ledger.add_owner(self.peer)
-        self.assertIsNone(self.ledger.get_previous_owner())
+        self.peer.ledger.add_owner(self.peer.keys["public"])
+        self.assertIsNone(self.peer.ledger.get_previous_owner())
 
-        self.ledger.add_owner(self.peer2)
-        self.assertEqual(self.ledger.get_previous_owner(), self.peer.keys["public"])
+        self.peer.ledger.add_owner(self.peer2.keys["public"])
+        self.assertEqual(
+            self.peer.ledger.get_previous_owner(), self.peer.keys["public"]
+        )
 
     def test_get_originator(self):
         """
         Test the get_originator method of Ledger
         """
 
-        self.ledger.add_owner(self.peer)
-        self.assertEqual(self.ledger.get_originator(), self.peer.keys["public"])
+        self.peer.ledger.add_owner(self.peer.keys["public"])
+        self.assertEqual(self.peer.ledger.get_originator(), self.peer.keys["public"])
 
     def test_get_owner_history(self):
         """
         Test the get_owner_history method of Ledger
         """
 
-        self.ledger.add_owner(self.peer)
-        expected_queue = deque([(self.peer.keys["public"], self.ledger.top)])
-        self.assertEqual(self.ledger.get_owner_history(), expected_queue)
+        self.peer.ledger.add_owner(self.peer.keys["public"])
+        expected_queue = deque([(self.peer.keys["public"], self.peer.ledger.top)])
+        self.assertEqual(self.peer.ledger.get_owner_history(), expected_queue)
 
     def test_verify_integrity(self):
         """
         Test the verify_integrity method of Ledger
         """
 
-        self.ledger.add_owner(self.peer)
-        self.assertTrue(self.ledger.verify_integrity())
+        self.peer.ledger.add_owner(self.peer.keys["public"])
+        self.assertTrue(self.peer.ledger.verify_integrity())
 
-        self.ledger.add_owner(self.peer2)
-        self.assertTrue(self.ledger.verify_integrity())
+        self.peer.ledger.add_owner(self.peer2.keys["public"])
+        self.assertTrue(self.peer.ledger.verify_integrity())
 
-        self.ledger.queue[0] = (self.peer, b"corrupted_hash")
-        self.assertFalse(self.ledger.verify_integrity())
+        self.peer.ledger.queue[0] = (self.peer, b"corrupted_hash")
+        self.assertFalse(self.peer.ledger.verify_integrity())
 
     async def test_handle_exchange_announcement_deadline(self):
         """
@@ -331,6 +333,7 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         await self.peer.handle_exchange_response(
             self.exchange_key, self.offer_response_sale
         )
+
         self.peer.logger.info.assert_any_call("Handling exchange response")
         self.assertEqual(0, len(self.peer.inventory.pending_exchanges))
         self.assertEqual(0, self.peer.wallet.get_balance())
@@ -341,6 +344,10 @@ class TestPeer(unittest.IsolatedAsyncioTestCase):
         )
 
         self.peer.logger.info("Exchange successful")
+        self.assertEqual(
+            self.offer_response_sale.get_exchanger_public_key(),
+            self.peer.ledger.get_owner(),
+        )
 
     async def test_handle_exchange_response_fail(self):
         """
