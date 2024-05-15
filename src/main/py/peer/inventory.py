@@ -2,7 +2,7 @@
 """
 Module to manage peer inventory functionality.
 
-The Inventory class keeps track of our commissions, owned artworks, and artworks pending trade.
+The Inventory class keeps track of our commissions, owned artworks, and artworks pending exchange.
 """
 import random
 from commission.artwork import Artwork
@@ -15,9 +15,9 @@ class Inventory:
         """Initializes an instance of the Inventory class"""
         self.commissions = {}
         self.owned_artworks = {}
-        self.pending_trades = {}
-        self.artworks_pending_trade = set()
-        self.completed_trades = set()
+        self.pending_exchanges = {}
+        self.artworks_pending_exchange = set()
+        self.completed_exchanges = set()
         self.commission_canvases = {}
 
     def add_commission(self, artwork: Artwork):
@@ -40,17 +40,18 @@ class Inventory:
 
         self.owned_artworks[artwork.key] = artwork
 
-    def add_pending_trade(self, trade_key, trade_offer):
+    def add_pending_exchange(self, exchange_key, exchange_offer):
         """
-        Adds an artwork pending trade to the inventory.
+        Adds an artwork pending exchange to the inventory.
 
         Params:
-        - trade_key (bytes): The key of the artwork to add to the inventory.
-        - trade_offer (OfferAnnouncement | OfferResponse): The trade offer to add to the inventory.
+        - exchange_key (bytes): The key of the artwork to add to the inventory.
+        - exchange_offer (OfferAnnouncement | OfferResponse): The exchange offer
+        to add to the inventory.
         """
 
-        self.artworks_pending_trade.add(trade_offer.artwork_id)
-        self.pending_trades[trade_key] = trade_offer
+        self.artworks_pending_exchange.add(exchange_offer.artwork)
+        self.pending_exchanges[exchange_key] = exchange_offer
 
     def remove_commission(self, artwork: Artwork):
         """
@@ -74,16 +75,16 @@ class Inventory:
         if artwork.key in self.owned_artworks:
             del self.owned_artworks[artwork.key]
 
-    def remove_pending_trade(self, trade_key):
+    def remove_pending_exchange(self, exchange_key):
         """
-        Removes an artwork pending trade from the inventory.
+        Removes an artwork pending exchange from the inventory.
 
         Params:
         - artwork (Artwork): The artwork to remove from the inventory.
         """
 
-        if trade_key in self.pending_trades:
-            del self.pending_trades[trade_key]
+        if exchange_key in self.pending_exchanges:
+            del self.pending_exchanges[exchange_key]
 
     def get_commission(self, key: bytes):
         """
@@ -119,17 +120,27 @@ class Inventory:
 
         return key in self.owned_artworks
 
-    def get_artwork_to_trade(self):
+    def get_artwork_to_exchange(self):
         """
-        Gets a random artwork to trade from the inventory.
+        Gets a random artwork to exchange from the inventory.
         """
 
         available_artworks = [
             artwork
             for artwork in self.owned_artworks.values()
-            if artwork.key not in self.artworks_pending_trade
+            if artwork.key not in self.artworks_pending_exchange
         ]
         if len(available_artworks) > 0:
             random_artwork = random.choice(available_artworks)
             return random_artwork
         return None
+
+    def get_artwork_by_id(self, artwork_id: bytes):
+        """
+        Returns an owned artwork from the inventory by its ID.
+        """
+
+        for artwork in self.owned_artworks.values():
+            if artwork.id == artwork_id:
+                return artwork
+        raise KeyError(f"No owned artwork found for ID: {artwork_id}")

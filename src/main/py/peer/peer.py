@@ -19,8 +19,9 @@ from commission.artwork import Artwork
 from commission.artfragmentgenerator import generate_fragment
 from peer.ledger import Ledger
 from peer.inventory import Inventory
-from trade.offer_response import OfferResponse
-from trade.offer_announcement import OfferAnnouncement
+from peer.wallet import Wallet
+from exchange.offer_response import OfferResponse
+from exchange.offer_announcement import OfferAnnouncement
 from drawing.drawing import Constraint
 import utils
 
@@ -69,6 +70,7 @@ class Peer:
         self.node = None
         self.inventory = Inventory()
         self.ledger = Ledger()
+        self.wallet = Wallet()
 
     async def send_deadline_reached(self, commission: Artwork) -> None:
         """
@@ -76,7 +78,7 @@ class Peer:
         """
 
         commission.set_complete()
-        commission.ledger.add_owner(self)
+        commission.ledger.add_owner(self.keys["public"])
         try:
             set_success = await self.node.set(
                 commission.get_key(), pickle.dumps(commission)
@@ -156,40 +158,62 @@ class Peer:
             except ValueError:
                 self.logger.error("Invalid input. Please enter a valid float.")
 
-    async def handle_announcement_deadline(self, announcement_key, offer_announcement):
-        """Handle the deadline for an announcement"""
+    async def handle_exchange_announcement_deadline(
+        self,
+        announcement_type: str,
+        announcement_key,
+        offer_announcement: OfferAnnouncement,
+    ):
+        """Handle the deadline for an exchange announcement"""
 
-        self.inventory.remove_pending_trade(announcement_key)
-        self.inventory.completed_trades.add(announcement_key)
+        self.inventory.remove_pending_exchange(announcement_key)
+        self.inventory.completed_exchanges.add(announcement_key)
+
+        self.wallet.add_to_balance(offer_announcement.get_price())
+        self.logger.info("Exchange announcement deadline reached")
+
         try:
             set_success = await self.node.set(
                 announcement_key, pickle.dumps(offer_announcement)
             )
             if set_success:
-                self.logger.info("Trade announced")
+                self.logger.info("%s announced", announcement_type)
             else:
-                self.logger.error("Trade failed to announce")
+                self.logger.error("%s failed to announce", announcement_type)
         except TypeError:
-            self.logger.error("Trade type is not pickleable")
+            self.logger.error("%s type is not pickleable", announcement_type)
 
-    async def announce_trade(self, wait_time=timedelta(seconds=10)):
+    async def announce_exchange(
+        self,
+        exchange_type: str,
+        price: int,
+        wait_time=timedelta(seconds=10),
+    ):
         """
-        Announce a trade to the network.
+        Announce an exchange to the network.
         """
 
-        self.logger.info("Announcing trade")
-        artwork = self.inventory.get_artwork_to_trade()
-        if not artwork:
-            self.logger.info("No artwork to trade")
+        if exchange_type not in ("sale", "trade"):
+            self.logger.error("Invalid exchange type")
             return
-        offer_announcement = OfferAnnouncement(artwork)
+
+        self.logger.info("Announcing exchange")
+        artwork = self.inventory.get_artwork_to_exchange()
+        if not artwork:
+            self.logger.info("No artwork for exchange")
+            return
+
+        offer_announcement = OfferAnnouncement(artwork, price, exchange_type)
+
         announcement_key = utils.generate_random_sha1_hash()
-        self.inventory.add_pending_trade(announcement_key, offer_announcement)
+        self.inventory.add_pending_exchange(announcement_key, offer_announcement)
 
         asyncio.get_event_loop().call_later(
             wait_time.total_seconds(),
             asyncio.create_task,
-            self.handle_announcement_deadline(announcement_key, offer_announcement),
+            self.handle_exchange_announcement_deadline(
+                exchange_type, announcement_key, offer_announcement
+            ),
         )
 
         try:
@@ -197,77 +221,113 @@ class Peer:
                 announcement_key, pickle.dumps(offer_announcement)
             )
             if set_success:
-                self.logger.info("Trade announced")
+                self.logger.info("%s announced", exchange_type)
             else:
-                self.logger.error("Trade failed to announce")
+                self.logger.error("%s failed to announce", exchange_type)
         except TypeError:
-            self.logger.error("Trade type is not pickleable")
+            self.logger.error("%s type is not pickleable", exchange_type)
 
-    async def send_trade_response(
-        self, trade_key: bytes, announcement: OfferAnnouncement
+    async def send_exchange_response(
+        self, exchange_key: bytes, announcement: OfferAnnouncement
     ):
         """
-        Send a trade response to the network.
+        Send a exchange response to the network.
         """
 
         if announcement.originator_public_key == self.keys["public"]:
             return
-        if trade_key in self.inventory.pending_trades and announcement.deadline_reached:
-            self.inventory.remove_pending_trade(trade_key)
-            return
+
+        if announcement.get_exchange_type() == "trade":
+            if (
+                exchange_key in self.inventory.pending_exchanges
+                and announcement.deadline_reached
+            ):
+                self.inventory.remove_pending_exchange(exchange_key)
+                return
+        if announcement.get_exchange_type() == "sale":
+            if announcement.deadline_reached:
+                return
+            if self.wallet.get_balance() < announcement.get_price():
+                self.logger.info("Insufficient funds.")
+                return
+
         self.logger.info(
-            "Sending trade response to %s", announcement.originator_public_key
+            "Sending %s response to %s",
+            announcement.get_exchange_type(),
+            announcement.originator_public_key,
         )
-        artwork_to_trade = self.inventory.get_artwork_to_trade()
-        if not artwork_to_trade:
-            self.logger.info("No trade response to send")
-            return
-        offer_response = OfferResponse(
-            trade_key, artwork_to_trade.key, self.keys["public"]
+
+        if announcement.get_exchange_type() == "trade":
+            artwork_to_exchange = self.inventory.get_artwork_to_exchange()
+            if not artwork_to_exchange:
+                self.logger.info("No artwork to send")
+                return
+        offer_response = (
+            OfferResponse(
+                exchange_key,
+                artwork_to_exchange,
+                announcement.get_price(),
+                self.keys["public"],
+            )
+            if announcement.get_exchange_type() == "trade"
+            else OfferResponse(
+                exchange_key, None, announcement.get_price(), self.keys["public"]
+            )
         )
 
         response_key = utils.generate_random_sha1_hash()
 
-        self.inventory.add_pending_trade(
-            trade_key,
-            offer_response,
-        )
         try:
             set_success = await self.node.set(
                 response_key, pickle.dumps(offer_response)
             )
             if set_success:
-                self.logger.info("Trade response sent")
+                self.logger.info("%s response sent", announcement.get_exchange_type())
             else:
-                self.logger.error("Trade response failed to send")
+                self.logger.error(
+                    "%s response failed to send", announcement.get_exchange_type()
+                )
+
         except TypeError:
-            self.logger.error("Trade response type is not pickleable")
+            self.logger.error(
+                "%s response type is not pickleable", announcement.get_exchange_type()
+            )
 
-    async def handle_accept_trade(self, response: OfferResponse):
-        """Handle an accepted trade"""
-
-        self.logger.info(response)
-
-    async def handle_reject_trade(self, response: OfferResponse):
-        """Handle a rejected trade"""
-
-        self.logger.info(response)
-
-    async def handle_trade_response(self, trade_key: bytes, response: OfferResponse):
+    async def handle_exchange_response(
+        self,
+        exchange_key: bytes,
+        response: OfferResponse,
+    ):
         """
-        Handle a trade response from the network.
+        Handle an exchange response from the network.
         """
 
-        self.logger.info("Handling trade response")
-        if trade_key in self.inventory.pending_trades:
-            self.inventory.remove_pending_trade(trade_key)
-            if response.trade_id in self.inventory.pending_trades:
-                self.inventory.remove_pending_trade(response.trade_id)
-            await self.handle_accept_trade(response)
-            self.logger.info("Trade successful")
+        self.logger.info("Handling exchange response")
+        if exchange_key in self.inventory.pending_exchanges:
+            self.inventory.remove_pending_exchange(exchange_key)
+            await self.handle_accept_exchange(response)
+            self.logger.info("Exchange successful")
         else:
-            await self.handle_reject_trade(response)
-            self.logger.info("Trade unsuccessful")
+            await self.handle_reject_exchange(response)
+            self.logger.info("Exchange unsuccessful")
+
+    async def handle_accept_exchange(
+        self,
+        response: OfferResponse,
+    ):
+        """Handle an accepted exchange"""
+
+        self.wallet.remove_from_balance(response.get_price())
+        exchanger = response.get_exchanger_public_key()
+        self.ledger.add_owner(exchanger)
+        self.logger.info("%s accepted the exchange.", exchanger)
+
+    async def handle_reject_exchange(self, response: OfferResponse):
+        """Handle a rejected exchange"""
+
+        self.logger.info(
+            "%s rejected the exchange.", response.get_exchanger_public_key()
+        )
 
     async def data_stored_callback(self, key, value):
         """
@@ -311,11 +371,11 @@ class Peer:
                     self.inventory.commission_canvases[message_object.artwork_id],
                 )
         elif isinstance(message_object, OfferAnnouncement):
-            self.logger.info("Received trade announcement")
-            await self.send_trade_response(key, message_object)
+            self.logger.info("Received exchange announcement")
+            await self.send_exchange_response(key, message_object)
         elif isinstance(message_object, OfferResponse):
-            self.logger.info("Received trade response")
-            await self.handle_trade_response(key, message_object)
+            self.logger.info("Received exchange response")
+            await self.handle_exchange_response(key, message_object)
         else:
             self.logger.error("Invalid object received")
 
@@ -352,7 +412,7 @@ class Peer:
         Create a new ledger for the artwork
         """
 
-        add = await self.ledger.add_owner(self)
+        add = await self.ledger.add_owner(self.keys["public"])
         if not add:
             self.logger.error("Failed to add owner to ledger")
             return

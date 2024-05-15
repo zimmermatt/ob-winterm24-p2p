@@ -18,16 +18,16 @@ class Ledger:
         self.queue = collections.deque()
         self.top = None
 
-    def add_owner(self, peer):
+    def add_owner(self, peer_public_key: str):
         """
         Add a new owner to the ledger.
         """
 
         previous_hash = self.top if self.top else b""
-        new_hash = hashlib.sha256(peer.keys["public"].encode()).digest()
+        new_hash = hashlib.sha256(peer_public_key.encode()).digest()
         combined_hash = previous_hash + new_hash
         self.top = hashlib.sha256(combined_hash).digest()
-        self.queue.append((peer.keys["public"], self.top))
+        self.queue.append((peer_public_key, self.top))
 
     def get_owner(self):
         """
