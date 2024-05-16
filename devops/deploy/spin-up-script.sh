@@ -3,7 +3,7 @@
 # Just a basic script to spin up listening servers on different ports in dynamic port range
 # Setting up variables
 PSTART=${1:-50000}
-PEND=${2:-50050}
+PEND=${2:-50049}
 PEER_FILE="peer_list.txt"
 IP="127.0.0.1"
 COUNT=0
@@ -53,7 +53,7 @@ do
     echo "${COUNT},${port},${private_key},${public_key}" >> $PEER_FILE
 
     # Create 2 commissioning peer, while the rest as listening peer doing the commission
-    if [ ${COUNT} -le 0 ]
+    if [ ${COUNT} -le 3 ]
     then
         export PYTHONPATH="src/main/py";python -m peer.peer ${port} "keys/node$COUNT" "${IP}:${PSTART}" < devops/deploy/commission_input.txt &
     else

@@ -68,6 +68,8 @@ class Peer:
             self.keys["private"] = private_key_file.read()
         self.kdm = kdm
         self.node = None
+        self.commission_requests_received = []
+        self.gui_callback = None
         self.inventory = Inventory()
         self.ledger = Ledger()
         self.wallet = Wallet()
@@ -102,7 +104,7 @@ class Peer:
         """
 
         deadline_seconds = commission.get_remaining_time()
-        asyncio.get_event_loop().call_later(
+        utils.call_later()(
             deadline_seconds,
             asyncio.create_task,
             self.send_deadline_reached(commission),
@@ -126,17 +128,29 @@ class Peer:
             self.logger.info(commission)
             self.logger.error("Commission type is not pickleable")
 
-    async def commission_art_piece(self) -> None:
+    async def commission_art_piece(
+        self, width=None, height=None, wait_time=None, palette_limit=None
+    ) -> None:
         """
         Get commission details from user input, create a commission, and send the request.
         """
 
         while True:
             try:
-                width = float(input("Enter commission width: "))
-                height = float(input("Enter commission height: "))
-                palette_limit = float(input("Enter palette limit: "))
-                wait_time = float(input("Enter wait time in seconds: "))
+                width = float(input("Enter commission width: ")) if not width else width
+                height = (
+                    float(input("Enter commission height: ")) if not height else height
+                )
+                palette_limit = (
+                    float(input("Enter palette limit: "))
+                    if not palette_limit
+                    else palette_limit
+                )
+                wait_time = (
+                    float(input("Enter wait time in seconds: "))
+                    if not wait_time
+                    else wait_time
+                )
                 constraint = Constraint(palette_limit, "any")
                 commission = Artwork(
                     width,
@@ -329,6 +343,27 @@ class Peer:
             "%s rejected the exchange.", response.get_exchanger_public_key()
         )
 
+    async def contribute_to_artwork(self, message_object: Artwork):
+        """
+        Contribute to an artwork by generating a fragment and sending it to the network.
+        """
+        fragment = generate_fragment(
+            message_object,
+            message_object.originator_long_id,
+            self.keys["public"],
+            self.node.node.long_id,
+        )
+        try:
+            set_success = await self.node.set(
+                utils.generate_random_sha1_hash(), pickle.dumps(fragment)
+            )
+            if set_success:
+                self.logger.info("Fragment sent")
+            else:
+                self.logger.error("Fragment failed to send")
+        except TypeError:
+            self.logger.error("Fragment type is not pickleable")
+
     async def data_stored_callback(self, key, value):
         """
         Callback function for when data is stored.
@@ -346,22 +381,11 @@ class Peer:
                 not message_object.commission_complete
                 and message_object.originator_public_key != self.keys["public"]
             ):
-                fragment = generate_fragment(
-                    message_object,
-                    message_object.originator_long_id,
-                    self.keys["public"],
-                    self.node.node.long_id,
-                )
-                try:
-                    set_success = await self.node.set(
-                        utils.generate_random_sha1_hash(), pickle.dumps(fragment)
-                    )
-                    if set_success:
-                        self.logger.info("Fragment sent")
-                    else:
-                        self.logger.error("Fragment failed to send")
-                except TypeError:
-                    self.logger.error("Fragment type is not pickleable")
+                self.commission_requests_received.append(message_object)
+                if callable(self.gui_callback):
+                    self.gui_callback()  # pylint: disable=not-callable
+                else:
+                    await self.contribute_to_artwork(message_object)
         elif isinstance(message_object, ArtFragment):
             if message_object.artwork_id in self.inventory.commissions:
                 self.inventory.commissions[
