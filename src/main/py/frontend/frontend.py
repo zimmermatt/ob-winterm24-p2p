@@ -11,6 +11,7 @@ import tkinter as tk
 from PIL import ImageTk
 from server.network import NotifyingServer as kademlia
 from peer.peer import Peer
+from utils import call_soon, call_later
 
 
 class Frontend:
@@ -26,7 +27,6 @@ class Frontend:
         frame = tk.Frame(window)
         frame.pack(fill=tk.X)
         self.commission_frames.append(frame)
-        # Create a label for the item
         label = tk.Label(
             frame,
             text=f"From: {commission.key} |"
@@ -36,8 +36,6 @@ class Frontend:
             width=100,
         )
         label.pack(side=tk.LEFT)
-
-        # Create a contribute button for the item
         button = tk.Button(
             frame,
             text="Contribute",
@@ -150,9 +148,9 @@ class Frontend:
 
         def update():
             window.update()
-            asyncio.get_event_loop().call_later(0.02, update)
+            call_later()(0.02, update)
 
-        asyncio.get_event_loop().call_soon(update)
+        call_soon()(update)
 
 
 async def main():

@@ -101,7 +101,7 @@ class Peer:
         """
 
         deadline_seconds = commission.get_remaining_time()
-        asyncio.get_event_loop().call_later(
+        utils.call_later()(
             deadline_seconds,
             asyncio.create_task,
             self.send_deadline_reached(commission),
