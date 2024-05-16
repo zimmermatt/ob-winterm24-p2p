@@ -106,7 +106,7 @@ class Frontend:
         height = float(height_entry)
         wait_time = float(wait_entry)
         commission = asyncio.create_task(
-            self.peer.commission_art_piece(width, height, wait_time)
+            self.peer.commission_art_piece(width, height, wait_time, palette_limit=10)
         )
         # Clear the window
         for widget in window.winfo_children():

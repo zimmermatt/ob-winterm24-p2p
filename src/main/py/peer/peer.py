@@ -141,12 +141,16 @@ class Peer:
                 height = (
                     float(input("Enter commission height: ")) if not height else height
                 )
+                palette_limit = (
+                    float(input("Enter palette limit: "))
+                    if not palette_limit
+                    else palette_limit
+                )
                 wait_time = (
                     float(input("Enter wait time in seconds: "))
                     if not wait_time
                     else wait_time
                 )
-                palette_limit = float(input("Enter palette limit: ")) if not palette_limit else palette_limit
                 constraint = Constraint(palette_limit, "any")
                 commission = Artwork(
                     width,
@@ -343,7 +347,12 @@ class Peer:
         """
         Contribute to an artwork by generating a fragment and sending it to the network.
         """
-        fragment = generate_fragment(message_object, self.keys["public"])
+        fragment = generate_fragment(
+            message_object,
+            message_object.originator_long_id,
+            self.keys["public"],
+            self.node.node.long_id,
+        )
         try:
             set_success = await self.node.set(
                 utils.generate_random_sha1_hash(), pickle.dumps(fragment)
