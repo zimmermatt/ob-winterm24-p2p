@@ -9,9 +9,7 @@ from unittest.mock import Mock
 from datetime import timedelta
 from commission.artfragmentgenerator import generate_fragment
 from commission.artwork import Artwork
-from commission.artwork import Constraint
-from commission.artwork import Pixel
-from drawing.color import Color
+from drawing.drawing import Constraint, Pixel
 
 
 class TestArtFragment(unittest.TestCase):
@@ -19,15 +17,15 @@ class TestArtFragment(unittest.TestCase):
 
     def setUp(self):
         """Create an instance of ArtFragment based on an Artwork"""
-        constraint = Constraint(Color(0, 8, 3, 255), "straight")
+        constraint = Constraint(5, "any")
         self.artwork = Artwork(
             10, 20, timedelta(seconds=0.5), Mock(), constraint=constraint
         )
-        self.artfragment = generate_fragment(self.artwork, "1")
+        self.artfragment = generate_fragment(self.artwork, 2, "1", 1)
 
     def test_initialization(self):
         """Check if the basic attributes are initialized correctly"""
-        self.assertEqual(self.artfragment.contributor, "1")
+        self.assertEqual(self.artfragment.contributor_id, "1")
         self.assertIsInstance(self.artfragment.pixels, set)
         for pixel in self.artfragment.pixels:
             self.assertIsInstance(pixel, Pixel)
